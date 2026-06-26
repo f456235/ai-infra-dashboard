@@ -1,0 +1,8 @@
+company_id,ticker,company_name,exchange,country,sector,ai_infra_category,website,description
+nvda,NVDA,NVIDIA,NASDAQ,United States,Semiconductors,AI Accelerator,https://www.nvidia.com,Designs GPUs networking systems and software for AI training and inference infrastructure.
+amd,AMD,AMD,NASDAQ,United States,Semiconductors,AI Accelerator,https://www.amd.com,Builds CPUs GPUs and adaptive computing products for AI workloads and cloud data centers.
+tsm,TSM,TSMC,NYSE,Taiwan,Semiconductors,Foundry,https://www.tsmc.com,Manufactures advanced logic chips for AI accelerators CPUs and custom silicon.
+avgo,AVGO,Broadcom,NASDAQ,United States,Semiconductors,ASIC,https://www.broadcom.com,Builds networking silicon custom accelerators and connectivity products used in AI clusters.
+mu,MU,Micron,NASDAQ,United States,Semiconductors,HBM,https://www.micron.com,Produces memory and storage products including HBM DRAM and NAND for AI servers.
+smci,SMCI,Supermicro,NASDAQ,United States,Technology Hardware,Industrial PC,https://www.supermicro.com,Manufactures high performance AI servers rack scale systems and liquid cooled infrastructure.
+vertiv,VRT,Vertiv,NYSE,United States,Electrical Equipment,Power,https://www.vertiv.com,Provides power cooling and infrastructure products for high density data centers.

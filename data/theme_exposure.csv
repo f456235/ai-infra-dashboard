@@ -1,0 +1,17 @@
+company_id,theme,exposure_level,notes
+nvda,AI Accelerator,High,Primary supplier of GPUs and AI networking platforms.
+nvda,Networking,High,Networking is increasingly bundled with AI cluster deployments.
+amd,AI Accelerator,High,Competes in GPU accelerators for training and inference.
+amd,ASIC,Medium,Adaptive and semi-custom products can participate in custom AI silicon.
+tsm,Foundry,High,Manufactures leading edge AI accelerator and custom silicon.
+tsm,Advanced Packaging,High,Advanced packaging capacity is critical for AI accelerator supply.
+avgo,ASIC,High,Large exposure to custom AI accelerator programs.
+avgo,Networking,High,Sells switching and connectivity silicon for AI clusters.
+mu,HBM,High,HBM demand is tied directly to AI accelerator growth.
+mu,DRAM,High,AI servers require high memory content.
+mu,NAND,Medium,Storage demand can rise with AI data pipelines.
+smci,Cooling,Medium,Sells liquid cooled AI server systems.
+smci,Industrial PC,High,Server platform exposure to AI infrastructure builds.
+vertiv,Power,High,Power equipment demand rises with high-density data centers.
+vertiv,Cooling,High,Thermal management is central to AI data center deployment.
+vertiv,BBU/UPS,Medium,Backup power and UPS systems support resilient AI facilities.

@@ -1,0 +1,15 @@
+company_id,period,estimated_revenue_usd_m,estimated_eps,estimated_revenue_yoy_pct,estimated_eps_yoy_pct,analyst_count,revision_direction
+nvda,2025-Q4,37900,0.84,72.0,84.0,43,Up
+nvda,2026-Q1,40500,0.91,55.0,52.0,45,Up
+amd,2025-Q4,7400,0.61,24.0,36.0,35,Up
+amd,2026-Q1,7800,0.68,43.0,871.0,36,Up
+tsm,2025-Q4,24800,1.76,34.0,27.0,28,Up
+tsm,2026-Q1,25700,1.82,36.0,32.0,29,Up
+avgo,2025-Q4,13800,12.35,45.0,20.0,32,Up
+avgo,2026-Q1,14300,12.80,20.0,16.0,33,Flat
+mu,2025-Q4,8300,1.58,56.0,145.0,29,Up
+mu,2026-Q1,8900,1.74,53.0,145.0,30,Up
+smci,2025-Q4,6400,8.10,63.0,24.0,18,Flat
+smci,2026-Q1,6850,8.45,78.0,29.0,19,Down
+vertiv,2025-Q4,2240,0.57,18.0,42.0,21,Up
+vertiv,2026-Q1,2320,0.61,41.0,91.0,22,Up

@@ -1,0 +1,9 @@
+event_id,date,company_id,category,event_title,summary,source_url,importance,thesis_impact
+evt_001,2025-10-02,nvda,Earnings,NVIDIA data center demand remains strong,Management commentary points to continued accelerator demand from cloud and enterprise AI workloads.,https://example.com/nvidia-earnings,High,Positive
+evt_002,2025-09-25,amd,Product,AMD expands AI accelerator roadmap,New accelerator products and software updates improve AMD's positioning in AI training and inference.,https://example.com/amd-roadmap,Medium,Positive
+evt_003,2025-09-18,tsm,Supply Chain,TSMC advanced packaging capacity remains tight,Demand for CoWoS and related advanced packaging remains a key constraint for AI accelerator supply.,https://example.com/tsmc-packaging,High,Positive
+evt_004,2025-09-12,avgo,Customer,Broadcom highlights custom AI silicon wins,Custom accelerator demand from large cloud customers supports the ASIC investment thesis.,https://example.com/broadcom-asic,High,Positive
+evt_005,2025-09-05,mu,Pricing,Memory pricing improves with HBM demand,Improving DRAM and HBM pricing may support margin recovery for memory suppliers.,https://example.com/micron-pricing,Medium,Positive
+evt_006,2025-08-28,smci,Earnings,Supermicro inventory remains an investor focus,Revenue growth is strong but inventory and margin trends require monitoring.,https://example.com/supermicro-inventory,Medium,Neutral
+evt_007,2025-08-20,vertiv,Industry,Data center power bottlenecks support infrastructure spending,Power and cooling constraints continue to increase demand for electrical and thermal infrastructure.,https://example.com/vertiv-power,High,Positive
+evt_008,2025-08-11,amd,Competition,Hyperscaler accelerator competition intensifies,More internal silicon and competing accelerators may pressure long-term pricing assumptions.,https://example.com/accelerator-competition,Medium,Negative
