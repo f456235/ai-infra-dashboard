@@ -9,6 +9,7 @@ from src.data_loader import (
     load_financial_metrics,
     load_theme_exposure,
     load_valuation_metrics,
+    load_watchlist,
 )
 
 
@@ -287,6 +288,42 @@ def render_theme_exposure(
     )
 
 
+def render_watchlist(companies: pd.DataFrame, watchlist: pd.DataFrame) -> None:
+    st.title("Watchlist")
+
+    priority = st.multiselect(
+        "Priority",
+        sorted(watchlist["priority"].unique()),
+        default=sorted(watchlist["priority"].unique()),
+    )
+    current_position = st.multiselect(
+        "Current position",
+        sorted(watchlist["current_position"].unique()),
+        default=sorted(watchlist["current_position"].unique()),
+    )
+
+    filtered = watchlist[
+        watchlist["priority"].isin(priority)
+        & watchlist["current_position"].isin(current_position)
+    ]
+    filtered = add_company_names(filtered, companies)
+
+    st.dataframe(
+        filtered[
+            [
+                "company_name",
+                "priority",
+                "current_position",
+                "thesis",
+                "risk",
+                "next_check",
+            ]
+        ].sort_values(["priority", "next_check", "company_name"]),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
 def main() -> None:
     companies = load_companies()
     financials = load_financial_metrics()
@@ -294,6 +331,7 @@ def main() -> None:
     estimates = load_estimates()
     events = load_ai_infra_events()
     theme_exposure = load_theme_exposure()
+    watchlist = load_watchlist()
 
     st.sidebar.title("AI Infrastructure")
     page = st.sidebar.radio(
@@ -306,6 +344,7 @@ def main() -> None:
             "Estimates",
             "Events",
             "Theme Exposure",
+            "Watchlist",
         ],
         label_visibility="collapsed",
     )
@@ -322,8 +361,10 @@ def main() -> None:
         render_estimates(companies, estimates)
     elif page == "Events":
         render_events(companies, events)
-    else:
+    elif page == "Theme Exposure":
         render_theme_exposure(companies, theme_exposure)
+    else:
+        render_watchlist(companies, watchlist)
 
 
 if __name__ == "__main__":

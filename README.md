@@ -17,6 +17,7 @@ automated updates.
 - Estimates page with company and period filters.
 - Events page with company, category, importance, and thesis impact filters.
 - Theme Exposure page with theme and exposure-level filters.
+- Watchlist page with priority and current-position filters.
 
 ## Project Structure
 
@@ -32,7 +33,8 @@ ai-infra-dashboard/
 │   ├── valuation_metrics.csv
 │   ├── estimates.csv
 │   ├── ai_infra_events.csv
-│   └── theme_exposure.csv
+│   ├── theme_exposure.csv
+│   └── watchlist.csv
 └── src/
     ├── data_loader.py
     └── charts.py
@@ -62,6 +64,7 @@ The app reads these files from `data/`:
 - `estimates.csv`
 - `ai_infra_events.csv`
 - `theme_exposure.csv`
+- `watchlist.csv`
 
 Required columns are validated in `src/data_loader.py`. If a required file or
 column is missing, the app displays a clear Streamlit error message.
@@ -74,4 +77,5 @@ column is missing, the app displays a clear Streamlit error message.
 - Add estimate periods to `data/estimates.csv`.
 - Add thesis events to `data/ai_infra_events.csv`.
 - Add or adjust theme mappings in `data/theme_exposure.csv`.
+- Add watchlist notes to `data/watchlist.csv`.
 - Add reusable charts in `src/charts.py`.

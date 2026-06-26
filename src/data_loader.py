@@ -74,6 +74,15 @@ THEME_EXPOSURE_COLUMNS = [
     "notes",
 ]
 
+WATCHLIST_COLUMNS = [
+    "company_id",
+    "priority",
+    "current_position",
+    "thesis",
+    "risk",
+    "next_check",
+]
+
 
 def validate_columns(data: pd.DataFrame, required_columns: list[str], filename: str) -> None:
     missing_columns = [column for column in required_columns if column not in data.columns]
@@ -96,8 +105,26 @@ def load_csv(
         st.error(f"Missing required data file: `data/{filename}`")
         st.stop()
 
-    data = pd.read_csv(path, parse_dates=date_columns or [])
+    try:
+        data = pd.read_csv(path)
+    except Exception as error:
+        st.error(f"Could not read `data/{filename}`: {error}")
+        st.stop()
+
     validate_columns(data, required_columns, filename)
+
+    for column in date_columns or []:
+        parsed_dates = pd.to_datetime(data[column], errors="coerce")
+        invalid_dates = (
+            parsed_dates.isna()
+            & data[column].notna()
+            & (data[column].astype(str).str.strip() != "")
+        )
+        if invalid_dates.any():
+            st.error(f"`data/{filename}` has invalid dates in `{column}`.")
+            st.stop()
+        data[column] = parsed_dates
+
     return data
 
 
@@ -128,3 +155,8 @@ def load_ai_infra_events() -> pd.DataFrame:
 def load_theme_exposure() -> pd.DataFrame:
     data = load_csv("theme_exposure.csv", THEME_EXPOSURE_COLUMNS)
     return data.sort_values(["theme", "company_id"])
+
+
+def load_watchlist() -> pd.DataFrame:
+    data = load_csv("watchlist.csv", WATCHLIST_COLUMNS, ["next_check"])
+    return data.sort_values(["priority", "next_check"])

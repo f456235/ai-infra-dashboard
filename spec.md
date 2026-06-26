@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a local Streamlit dashboard for tracking AI infrastructure companies, financial metrics, valuation, market expectations, and industry events.
+Build a local Streamlit dashboard for tracking AI infrastructure companies, financial metrics, valuation, market expectations, industry events, and a personal watchlist.
 
 The dashboard is for personal research and investment tracking. It should help answer:
 
@@ -144,6 +144,19 @@ Valid themes include:
 * Networking
 * Industrial PC
 
+### 7. watchlist.csv
+
+Personal tracking notes for companies under active review.
+
+Columns:
+
+* company_id
+* priority
+* current_position
+* thesis
+* risk
+* next_check
+
 ## Pages
 
 ### 1. Overview
@@ -219,6 +232,17 @@ Requirements:
 * Filter by exposure level
 * Show which companies are exposed to each theme
 
+### 8. Watchlist
+
+Show personal watchlist notes.
+
+Requirements:
+
+* Join company_id with company_name for display
+* Filter by priority
+* Filter by current_position
+* Show thesis, risk, and next check date
+
 ## Code Requirements
 
 * Keep code simple and beginner-friendly
@@ -247,7 +271,8 @@ ai-infra-dashboard/
 │   ├── valuation_metrics.csv
 │   ├── estimates.csv
 │   ├── ai_infra_events.csv
-│   └── theme_exposure.csv
+│   ├── theme_exposure.csv
+│   └── watchlist.csv
 └── src/
     ├── data_loader.py
     └── charts.py
