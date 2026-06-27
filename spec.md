@@ -243,6 +243,61 @@ Requirements:
 * Filter by current_position
 * Show thesis, risk, and next check date
 
+### 9. Company Detail
+
+Show single-company research details.
+
+Requirements:
+
+* Select one company by company_name
+* Show company profile from companies.csv
+* Show watchlist notes from watchlist.csv if available
+* Show latest financial metrics from financial_metrics.csv
+* Show latest valuation metrics from valuation_metrics.csv
+* Show estimates from estimates.csv
+* Show theme exposure from theme_exposure.csv
+* Show recent events from ai_infra_events.csv
+* Do not replace the Financial Metrics, Valuation, Estimates, or Events pages
+* Keep Companies as a browse/filter page without clickable company navigation for now
+
+### 10. Better Charts and Company Comparison
+
+Improve the dashboard from static tables into a comparison and trend analysis tool.
+
+Requirements:
+
+* Add multi-company selection where appropriate
+* Use Plotly line charts
+* Reuse financial_metrics.csv and valuation_metrics.csv
+* Keep existing tables
+* Do not remove existing pages
+* Show revenue trend by default
+* Show revenue YoY trend by default
+* Show EPS trend by default
+* Show gross margin trend by default
+* Show free cash flow trend by default
+* Show forward PE trend by default
+* Offer operating margin, CapEx, inventory, and price-to-sales as optional charts
+* On Financial Metrics, compare multiple companies over time
+* On Valuation, compare forward PE by default and price-to-sales optionally when multiple dates exist
+* On Company Detail, show simple trend charts for the selected company
+* Sort period-based charts chronologically, not alphabetically
+
+Chart intent:
+
+* Revenue trend: demand and business scale
+* Revenue YoY: growth acceleration or deceleration
+* EPS trend: profitability to shareholders
+* Gross margin trend: pricing power and product mix
+* Free cash flow trend: ability to fund growth
+* Forward PE trend: valuation relative to future earnings
+
+Chart design:
+
+* Show a short caption above each chart explaining what question it helps answer
+* Move CapEx, operating margin, inventory, and price-to-sales into optional chart selectors
+* Keep the implementation simple
+
 ## Code Requirements
 
 * Keep code simple and beginner-friendly

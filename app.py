@@ -1,7 +1,19 @@
 import pandas as pd
 import streamlit as st
 
-from src.charts import revenue_line_chart, valuation_scatter_chart
+from src.charts import (
+    capex_line_chart,
+    eps_line_chart,
+    forward_pe_line_chart,
+    free_cash_flow_line_chart,
+    gross_margin_line_chart,
+    inventory_line_chart,
+    operating_margin_line_chart,
+    price_to_sales_line_chart,
+    revenue_line_chart,
+    revenue_yoy_line_chart,
+    sort_by_period,
+)
 from src.data_loader import (
     load_ai_infra_events,
     load_companies,
@@ -39,10 +51,66 @@ def company_filter(label: str, companies: pd.DataFrame) -> list[str]:
     return companies.loc[companies["company_name"] == selected, "company_id"].tolist()
 
 
+def multi_company_filter(label: str, companies: pd.DataFrame) -> list[str]:
+    company_names = companies["company_name"].sort_values().tolist()
+    selected_names = st.multiselect(label, company_names, default=company_names)
+    return companies[
+        companies["company_name"].isin(selected_names)
+    ]["company_id"].tolist()
+
+
+def select_company(companies: pd.DataFrame) -> tuple[str, str]:
+    company_names = companies["company_name"].sort_values().tolist()
+    selected_name = st.selectbox("Company", company_names)
+    selected_id = companies.loc[
+        companies["company_name"] == selected_name, "company_id"
+    ].iloc[0]
+    return selected_id, selected_name
+
+
 def period_filter(data: pd.DataFrame, column: str = "period") -> list[str]:
-    periods = sorted(data[column].dropna().unique(), reverse=True)
+    periods = sort_by_period(
+        data[[column]].drop_duplicates().assign(company_name=""),
+        column,
+    )[column].tolist()
     selected = st.multiselect("Period", periods, default=periods)
     return selected
+
+
+def show_table_or_message(data: pd.DataFrame, message: str) -> None:
+    if data.empty:
+        st.info(message)
+        return
+    st.dataframe(data, use_container_width=True, hide_index=True)
+
+
+def show_chart(caption: str, chart) -> None:
+    st.caption(caption)
+    st.plotly_chart(chart, use_container_width=True)
+
+
+OPTIONAL_FINANCIAL_CHARTS = {
+    "CapEx": (
+        "How much is the company investing to support growth?",
+        capex_line_chart,
+    ),
+    "Operating margin": (
+        "Is operating leverage improving as the business scales?",
+        operating_margin_line_chart,
+    ),
+    "Inventory": (
+        "Is inventory building faster than demand?",
+        inventory_line_chart,
+    ),
+}
+
+
+OPTIONAL_VALUATION_CHARTS = {
+    "Price-to-sales": (
+        "How is valuation moving relative to revenue?",
+        price_to_sales_line_chart,
+    ),
+}
 
 
 def render_overview(
@@ -133,7 +201,7 @@ def render_companies(companies: pd.DataFrame) -> None:
 def render_financial_metrics(companies: pd.DataFrame, financials: pd.DataFrame) -> None:
     st.title("Financial Metrics")
 
-    selected_company_ids = company_filter("Company", companies)
+    selected_company_ids = multi_company_filter("Companies", companies)
     selected_periods = period_filter(financials)
     filtered = financials[
         financials["company_id"].isin(selected_company_ids)
@@ -141,9 +209,40 @@ def render_financial_metrics(companies: pd.DataFrame, financials: pd.DataFrame) 
     ]
     filtered = add_company_names(filtered, companies)
 
-    st.plotly_chart(revenue_line_chart(filtered), use_container_width=True)
+    first_row, second_row = st.columns(2)
+    with first_row:
+        show_chart(
+            "What does revenue say about demand and business scale?",
+            revenue_line_chart(filtered),
+        )
+        show_chart(
+            "Is growth accelerating or decelerating?",
+            revenue_yoy_line_chart(filtered),
+        )
+        show_chart(
+            "Can the company fund growth from its own cash generation?",
+            free_cash_flow_line_chart(filtered),
+        )
+    with second_row:
+        show_chart(
+            "How much profitability is reaching shareholders?",
+            eps_line_chart(filtered),
+        )
+        show_chart(
+            "What do margins say about pricing power and product mix?",
+            gross_margin_line_chart(filtered),
+        )
+
+    optional_charts = st.multiselect(
+        "Optional financial charts",
+        list(OPTIONAL_FINANCIAL_CHARTS.keys()),
+    )
+    for chart_name in optional_charts:
+        caption, chart_function = OPTIONAL_FINANCIAL_CHARTS[chart_name]
+        show_chart(caption, chart_function(filtered))
+
     st.dataframe(
-        filtered[
+        sort_by_period(filtered)[
             [
                 "period",
                 "company_name",
@@ -157,7 +256,7 @@ def render_financial_metrics(companies: pd.DataFrame, financials: pd.DataFrame) 
                 "free_cash_flow_usd_m",
                 "inventory_usd_m",
             ]
-        ].sort_values(["period", "company_name"], ascending=[False, True]),
+        ],
         use_container_width=True,
         hide_index=True,
     )
@@ -166,11 +265,23 @@ def render_financial_metrics(companies: pd.DataFrame, financials: pd.DataFrame) 
 def render_valuation(companies: pd.DataFrame, valuations: pd.DataFrame) -> None:
     st.title("Valuation")
 
-    selected_company_ids = company_filter("Company", companies)
+    selected_company_ids = multi_company_filter("Companies", companies)
     filtered = valuations[valuations["company_id"].isin(selected_company_ids)]
     filtered = add_company_names(filtered, companies)
 
-    st.plotly_chart(valuation_scatter_chart(filtered), use_container_width=True)
+    show_chart(
+        "How is valuation changing relative to future earnings expectations?",
+        forward_pe_line_chart(filtered),
+    )
+
+    optional_charts = st.multiselect(
+        "Optional valuation charts",
+        list(OPTIONAL_VALUATION_CHARTS.keys()),
+    )
+    for chart_name in optional_charts:
+        caption, chart_function = OPTIONAL_VALUATION_CHARTS[chart_name]
+        show_chart(caption, chart_function(filtered))
+
     st.subheader("Valuation table sorted by forward PE")
     st.dataframe(
         filtered[
@@ -324,6 +435,187 @@ def render_watchlist(companies: pd.DataFrame, watchlist: pd.DataFrame) -> None:
     )
 
 
+def render_company_detail(
+    companies: pd.DataFrame,
+    financials: pd.DataFrame,
+    valuations: pd.DataFrame,
+    estimates: pd.DataFrame,
+    events: pd.DataFrame,
+    theme_exposure: pd.DataFrame,
+    watchlist: pd.DataFrame,
+) -> None:
+    st.title("Company Detail")
+    company_id, company_name = select_company(companies)
+
+    company = companies[companies["company_id"] == company_id].iloc[0]
+    company_financials = financials[financials["company_id"] == company_id]
+    company_valuations = valuations[valuations["company_id"] == company_id]
+    company_estimates = estimates[estimates["company_id"] == company_id]
+    company_events = events[events["company_id"] == company_id]
+    company_themes = theme_exposure[theme_exposure["company_id"] == company_id]
+    company_watchlist = watchlist[watchlist["company_id"] == company_id]
+
+    st.subheader(company_name)
+    st.write(company["description"])
+    profile = pd.DataFrame(
+        {
+            "Field": [
+                "Ticker",
+                "Exchange",
+                "Country",
+                "Sector",
+                "AI infrastructure category",
+                "Website",
+            ],
+            "Value": [
+                company["ticker"],
+                company["exchange"],
+                company["country"],
+                company["sector"],
+                company["ai_infra_category"],
+                company["website"],
+            ],
+        }
+    )
+    st.dataframe(profile, use_container_width=True, hide_index=True)
+
+    st.subheader("Watchlist Notes")
+    watchlist_view = company_watchlist[
+        ["priority", "current_position", "thesis", "risk", "next_check"]
+    ]
+    show_table_or_message(watchlist_view, "No watchlist notes for this company.")
+
+    if not company_financials.empty:
+        st.subheader("Financial Trends")
+        trend_data = add_company_names(company_financials, companies)
+        first_row, second_row = st.columns(2)
+        with first_row:
+            show_chart(
+                "What does revenue say about demand and business scale?",
+                revenue_line_chart(trend_data),
+            )
+            show_chart(
+                "Is growth accelerating or decelerating?",
+                revenue_yoy_line_chart(trend_data),
+            )
+            show_chart(
+                "Can the company fund growth from its own cash generation?",
+                free_cash_flow_line_chart(trend_data),
+            )
+        with second_row:
+            show_chart(
+                "How much profitability is reaching shareholders?",
+                eps_line_chart(trend_data),
+            )
+            show_chart(
+                "What do margins say about pricing power and product mix?",
+                gross_margin_line_chart(trend_data),
+            )
+
+        optional_charts = st.multiselect(
+            "Optional company financial charts",
+            list(OPTIONAL_FINANCIAL_CHARTS.keys()),
+        )
+        for chart_name in optional_charts:
+            caption, chart_function = OPTIONAL_FINANCIAL_CHARTS[chart_name]
+            show_chart(caption, chart_function(trend_data))
+
+    st.subheader("Latest Financial Metrics")
+    if company_financials.empty:
+        st.info("No financial metrics for this company.")
+    else:
+        latest_financial = company_financials.sort_values("period").tail(1)
+        st.dataframe(
+            latest_financial[
+                [
+                    "period",
+                    "revenue_usd_m",
+                    "revenue_yoy_pct",
+                    "gross_margin_pct",
+                    "operating_margin_pct",
+                    "net_income_usd_m",
+                    "eps",
+                    "eps_yoy_pct",
+                    "capex_usd_m",
+                    "free_cash_flow_usd_m",
+                    "inventory_usd_m",
+                ]
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    if not company_valuations.empty:
+        st.subheader("Valuation Trends")
+        valuation_trend_data = add_company_names(company_valuations, companies)
+        show_chart(
+            "How is valuation changing relative to future earnings expectations?",
+            forward_pe_line_chart(valuation_trend_data),
+        )
+        optional_charts = st.multiselect(
+            "Optional company valuation charts",
+            list(OPTIONAL_VALUATION_CHARTS.keys()),
+        )
+        for chart_name in optional_charts:
+            caption, chart_function = OPTIONAL_VALUATION_CHARTS[chart_name]
+            show_chart(caption, chart_function(valuation_trend_data))
+
+    st.subheader("Latest Valuation Metrics")
+    if company_valuations.empty:
+        st.info("No valuation metrics for this company.")
+    else:
+        latest_valuation = company_valuations.sort_values("date").tail(1)
+        st.dataframe(
+            latest_valuation[
+                [
+                    "date",
+                    "price",
+                    "market_cap_usd_m",
+                    "trailing_pe",
+                    "forward_pe",
+                    "price_to_sales",
+                    "ev_to_ebitda",
+                ]
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    st.subheader("Estimates")
+    estimates_view = company_estimates[
+        [
+            "period",
+            "estimated_revenue_usd_m",
+            "estimated_eps",
+            "estimated_revenue_yoy_pct",
+            "estimated_eps_yoy_pct",
+            "analyst_count",
+            "revision_direction",
+        ]
+    ].sort_values("period", ascending=False)
+    show_table_or_message(estimates_view, "No estimates for this company.")
+
+    st.subheader("Theme Exposure")
+    themes_view = company_themes[
+        ["theme", "exposure_level", "notes"]
+    ].sort_values(["theme", "exposure_level"])
+    show_table_or_message(themes_view, "No theme exposure for this company.")
+
+    st.subheader("Recent Events")
+    events_view = company_events[
+        [
+            "date",
+            "category",
+            "event_title",
+            "summary",
+            "importance",
+            "thesis_impact",
+            "source_url",
+        ]
+    ].sort_values("date", ascending=False)
+    show_table_or_message(events_view, "No recent events for this company.")
+
+
 def main() -> None:
     companies = load_companies()
     financials = load_financial_metrics()
@@ -339,6 +631,7 @@ def main() -> None:
         [
             "Overview",
             "Companies",
+            "Company Detail",
             "Financial Metrics",
             "Valuation",
             "Estimates",
@@ -353,6 +646,16 @@ def main() -> None:
         render_overview(companies, financials, events, theme_exposure)
     elif page == "Companies":
         render_companies(companies)
+    elif page == "Company Detail":
+        render_company_detail(
+            companies,
+            financials,
+            valuations,
+            estimates,
+            events,
+            theme_exposure,
+            watchlist,
+        )
     elif page == "Financial Metrics":
         render_financial_metrics(companies, financials)
     elif page == "Valuation":

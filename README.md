@@ -18,6 +18,8 @@ automated updates.
 - Events page with company, category, importance, and thesis impact filters.
 - Theme Exposure page with theme and exposure-level filters.
 - Watchlist page with priority and current-position filters.
+- Company Detail page for single-company research.
+- Multi-company trend charts with short chart captions and optional secondary metrics.
 
 ## Project Structure
 
