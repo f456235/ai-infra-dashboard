@@ -19,8 +19,12 @@ from src.data_loader import (
     load_companies,
     load_entity_relationships,
     load_estimates,
+    load_evidence,
     load_financial_metrics,
     load_industry_theses,
+    load_products,
+    load_relationships,
+    load_technologies,
     load_theme_exposure,
     load_valuation_metrics,
     load_watchlist,
@@ -84,6 +88,10 @@ def show_table_or_message(data: pd.DataFrame, message: str) -> None:
         st.info(message)
         return
     st.dataframe(data, use_container_width=True, hide_index=True)
+
+
+def filter_values(data: pd.DataFrame, column: str) -> list[str]:
+    return sorted(data[column].fillna("").astype(str).unique())
 
 
 def show_chart(caption: str, chart) -> None:
@@ -525,6 +533,191 @@ def render_industry_thesis(
     )
 
 
+def render_technology_page(technologies: pd.DataFrame) -> None:
+    st.title("Technology")
+
+    technology_category = st.multiselect(
+        "Technology category",
+        filter_values(technologies, "technology_category"),
+        default=filter_values(technologies, "technology_category"),
+    )
+    maturity_stage = st.multiselect(
+        "Maturity stage",
+        filter_values(technologies, "maturity_stage"),
+        default=filter_values(technologies, "maturity_stage"),
+    )
+
+    filtered = technologies[
+        technologies["technology_category"].astype(str).isin(technology_category)
+        & technologies["maturity_stage"].astype(str).isin(maturity_stage)
+    ]
+    show_table_or_message(
+        filtered[
+            [
+                "technology_id",
+                "technology_name",
+                "technology_category",
+                "description",
+                "related_thesis_ids",
+                "maturity_stage",
+                "key_companies",
+                "last_reviewed",
+            ]
+        ],
+        "No technologies match the selected filters.",
+    )
+
+
+def render_product_page(products: pd.DataFrame) -> None:
+    st.title("Product")
+
+    product_data = products.copy()
+    product_data["primary_company_id"] = product_data["primary_company_id"].fillna("")
+
+    primary_company_id = st.multiselect(
+        "Primary company ID",
+        filter_values(product_data, "primary_company_id"),
+        default=filter_values(product_data, "primary_company_id"),
+    )
+    product_category = st.multiselect(
+        "Product category",
+        filter_values(product_data, "product_category"),
+        default=filter_values(product_data, "product_category"),
+    )
+    launch_status = st.multiselect(
+        "Launch status",
+        filter_values(product_data, "launch_status"),
+        default=filter_values(product_data, "launch_status"),
+    )
+
+    filtered = product_data[
+        product_data["primary_company_id"].astype(str).isin(primary_company_id)
+        & product_data["product_category"].astype(str).isin(product_category)
+        & product_data["launch_status"].astype(str).isin(launch_status)
+    ]
+    show_table_or_message(
+        filtered[
+            [
+                "product_id",
+                "product_name",
+                "primary_company_id",
+                "product_category",
+                "description",
+                "launch_status",
+                "related_technology_ids",
+                "related_thesis_ids",
+                "last_reviewed",
+            ]
+        ],
+        "No products match the selected filters.",
+    )
+
+
+def render_evidence_page(evidence: pd.DataFrame) -> None:
+    st.title("Evidence")
+
+    evidence_direction = st.multiselect(
+        "Evidence direction",
+        filter_values(evidence, "evidence_direction"),
+        default=filter_values(evidence, "evidence_direction"),
+    )
+    related_company_id = st.multiselect(
+        "Related company ID",
+        filter_values(evidence, "related_company_id"),
+        default=filter_values(evidence, "related_company_id"),
+    )
+    related_thesis_id = st.multiselect(
+        "Related thesis ID",
+        filter_values(evidence, "related_thesis_id"),
+        default=filter_values(evidence, "related_thesis_id"),
+    )
+    confidence = st.multiselect(
+        "Confidence",
+        filter_values(evidence, "confidence"),
+        default=filter_values(evidence, "confidence"),
+    )
+
+    filtered = evidence[
+        evidence["evidence_direction"].astype(str).isin(evidence_direction)
+        & evidence["related_company_id"].astype(str).isin(related_company_id)
+        & evidence["related_thesis_id"].astype(str).isin(related_thesis_id)
+        & evidence["confidence"].astype(str).isin(confidence)
+    ]
+    evidence_view = filtered[
+        [
+            "date",
+            "fact_text",
+            "evidence_title",
+            "evidence_summary",
+            "evidence_direction",
+            "confidence",
+            "related_company_id",
+            "related_thesis_id",
+            "source_type",
+            "source_url",
+            "notes",
+        ]
+    ]
+    if evidence_view.empty:
+        st.info("No evidence records match the selected filters.")
+        return
+    st.dataframe(
+        evidence_view,
+        use_container_width=True,
+        hide_index=True,
+        column_config={"source_url": st.column_config.LinkColumn("source_url")},
+    )
+
+
+def render_relationships_page(relationships: pd.DataFrame) -> None:
+    st.title("Relationships")
+
+    source_type = st.multiselect(
+        "Source type",
+        filter_values(relationships, "source_type"),
+        default=filter_values(relationships, "source_type"),
+    )
+    relationship_type = st.multiselect(
+        "Relationship type",
+        filter_values(relationships, "relationship_type"),
+        default=filter_values(relationships, "relationship_type"),
+    )
+    target_type = st.multiselect(
+        "Target type",
+        filter_values(relationships, "target_type"),
+        default=filter_values(relationships, "target_type"),
+    )
+    confidence = st.multiselect(
+        "Confidence",
+        filter_values(relationships, "confidence"),
+        default=filter_values(relationships, "confidence"),
+    )
+
+    filtered = relationships[
+        relationships["source_type"].astype(str).isin(source_type)
+        & relationships["relationship_type"].astype(str).isin(relationship_type)
+        & relationships["target_type"].astype(str).isin(target_type)
+        & relationships["confidence"].astype(str).isin(confidence)
+    ]
+    show_table_or_message(
+        filtered[
+            [
+                "relationship_id",
+                "source_id",
+                "source_type",
+                "relationship_type",
+                "target_id",
+                "target_type",
+                "reason",
+                "confidence",
+                "evidence_id",
+                "last_updated",
+            ]
+        ],
+        "No relationships match the selected filters.",
+    )
+
+
 def render_company_detail(
     companies: pd.DataFrame,
     financials: pd.DataFrame,
@@ -716,6 +909,10 @@ def main() -> None:
     watchlist = load_watchlist()
     industry_theses = load_industry_theses()
     entity_relationships = load_entity_relationships()
+    technologies = load_technologies()
+    products = load_products()
+    evidence = load_evidence()
+    relationships = load_relationships()
 
     st.sidebar.title("AI Infrastructure")
     page = st.sidebar.radio(
@@ -731,6 +928,10 @@ def main() -> None:
             "Theme Exposure",
             "Watchlist",
             "Industry Thesis",
+            "Technology",
+            "Product",
+            "Evidence",
+            "Relationships",
         ],
         label_visibility="collapsed",
     )
@@ -761,8 +962,16 @@ def main() -> None:
         render_theme_exposure(companies, theme_exposure)
     elif page == "Watchlist":
         render_watchlist(companies, watchlist)
-    else:
+    elif page == "Industry Thesis":
         render_industry_thesis(industry_theses, entity_relationships)
+    elif page == "Technology":
+        render_technology_page(technologies)
+    elif page == "Product":
+        render_product_page(products)
+    elif page == "Evidence":
+        render_evidence_page(evidence)
+    else:
+        render_relationships_page(relationships)
 
 
 if __name__ == "__main__":
