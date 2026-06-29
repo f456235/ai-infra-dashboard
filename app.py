@@ -16,8 +16,8 @@ from src.charts import (
 )
 from src.data_loader import (
     load_ai_infra_events,
+    load_company_exposure,
     load_companies,
-    load_entity_relationships,
     load_estimates,
     load_evidence,
     load_financial_metrics,
@@ -92,6 +92,40 @@ def show_table_or_message(data: pd.DataFrame, message: str) -> None:
 
 def filter_values(data: pd.DataFrame, column: str) -> list[str]:
     return sorted(data[column].fillna("").astype(str).unique())
+
+
+def split_ids(value) -> list[str]:
+    if pd.isna(value) or value == "":
+        return []
+    return [item.strip() for item in str(value).split(";") if item.strip()]
+
+
+def contains_id(value, target_id: str) -> bool:
+    return target_id in split_ids(value)
+
+
+def related_ids(
+    relationships: pd.DataFrame,
+    source_id: str,
+    target_type: str,
+) -> list[str]:
+    matches = relationships[
+        (relationships["source_id"] == source_id)
+        & (relationships["target_type"] == target_type)
+    ]
+    return matches["target_id"].dropna().astype(str).unique().tolist()
+
+
+def source_ids_for_target(
+    relationships: pd.DataFrame,
+    target_id: str,
+    source_type: str,
+) -> list[str]:
+    matches = relationships[
+        (relationships["target_id"] == target_id)
+        & (relationships["source_type"] == source_type)
+    ]
+    return matches["source_id"].dropna().astype(str).unique().tolist()
 
 
 def show_chart(caption: str, chart) -> None:
@@ -447,89 +481,136 @@ def render_watchlist(companies: pd.DataFrame, watchlist: pd.DataFrame) -> None:
 
 def render_industry_thesis(
     industry_theses: pd.DataFrame,
-    entity_relationships: pd.DataFrame,
+    evidence: pd.DataFrame,
+    technologies: pd.DataFrame,
+    products: pd.DataFrame,
+    company_exposure: pd.DataFrame,
 ) -> None:
     st.title("Industry Thesis")
 
     st.subheader("Industry Theses")
-    theme = st.multiselect(
-        "Theme",
-        sorted(industry_theses["theme"].unique()),
-        default=sorted(industry_theses["theme"].unique()),
+    industry_layer = st.multiselect(
+        "Industry layer",
+        filter_values(industry_theses, "industry_layer"),
+        default=filter_values(industry_theses, "industry_layer"),
+    )
+    thesis_category = st.multiselect(
+        "Thesis category",
+        filter_values(industry_theses, "thesis_category"),
+        default=filter_values(industry_theses, "thesis_category"),
     )
     status = st.multiselect(
         "Status",
-        sorted(industry_theses["status"].unique()),
-        default=sorted(industry_theses["status"].unique()),
+        filter_values(industry_theses, "status"),
+        default=filter_values(industry_theses, "status"),
     )
     conviction = st.multiselect(
         "Conviction",
-        sorted(industry_theses["conviction"].unique()),
-        default=sorted(industry_theses["conviction"].unique()),
+        filter_values(industry_theses, "conviction"),
+        default=filter_values(industry_theses, "conviction"),
     )
 
     filtered_theses = industry_theses[
-        industry_theses["theme"].isin(theme)
+        industry_theses["industry_layer"].astype(str).isin(industry_layer)
+        & industry_theses["thesis_category"].astype(str).isin(thesis_category)
         & industry_theses["status"].isin(status)
         & industry_theses["conviction"].isin(conviction)
     ]
     show_table_or_message(
         filtered_theses[
             [
-                "theme",
+                "thesis_id",
+                "industry_layer",
+                "thesis_category",
                 "thesis_title",
                 "thesis_summary",
-                "key_drivers",
-                "risks",
                 "status",
                 "conviction",
+                "key_drivers",
+                "risks",
                 "last_reviewed",
             ]
-        ].sort_values(["theme", "conviction", "last_reviewed"]),
+        ].sort_values(["industry_layer", "thesis_category", "last_reviewed"]),
         "No theses match the selected filters.",
     )
 
-    st.subheader("Entity Relationships")
-    source_type = st.multiselect(
-        "Source type",
-        sorted(entity_relationships["source_type"].unique()),
-        default=sorted(entity_relationships["source_type"].unique()),
-    )
-    relationship_type = st.multiselect(
-        "Relationship type",
-        sorted(entity_relationships["relationship_type"].unique()),
-        default=sorted(entity_relationships["relationship_type"].unique()),
-    )
-    target_type = st.multiselect(
-        "Target type",
-        sorted(entity_relationships["target_type"].unique()),
-        default=sorted(entity_relationships["target_type"].unique()),
-    )
-    importance = st.multiselect(
-        "Relationship importance",
-        sorted(entity_relationships["importance"].unique()),
-        default=sorted(entity_relationships["importance"].unique()),
-    )
+    selected_thesis_ids = filtered_theses["thesis_id"].tolist()
 
-    filtered_relationships = entity_relationships[
-        entity_relationships["source_type"].isin(source_type)
-        & entity_relationships["relationship_type"].isin(relationship_type)
-        & entity_relationships["target_type"].isin(target_type)
-        & entity_relationships["importance"].isin(importance)
-    ]
+    st.subheader("Related Evidence")
+    related_evidence = evidence[evidence["related_thesis_id"].isin(selected_thesis_ids)]
     show_table_or_message(
-        filtered_relationships[
+        related_evidence[
             [
-                "source_entity",
-                "source_type",
-                "relationship_type",
-                "target_entity",
-                "target_type",
-                "importance",
-                "notes",
+                "date",
+                "related_thesis_id",
+                "fact_text",
+                "evidence_summary",
+                "evidence_direction",
+                "confidence",
+                "related_company_id",
+                "source_url",
             ]
         ],
-        "No relationships match the selected filters.",
+        "No evidence is linked to the selected theses.",
+    )
+
+    st.subheader("Related Technologies")
+    related_technologies = technologies[
+        technologies["related_thesis_ids"].apply(
+            lambda value: any(thesis_id in split_ids(value) for thesis_id in selected_thesis_ids)
+        )
+    ]
+    show_table_or_message(
+        related_technologies[
+            [
+                "technology_name",
+                "technology_category",
+                "description",
+                "related_thesis_ids",
+                "maturity_stage",
+                "key_companies",
+            ]
+        ],
+        "No technologies are linked to the selected theses.",
+    )
+
+    st.subheader("Related Products")
+    related_products = products[
+        products["related_thesis_ids"].apply(
+            lambda value: any(thesis_id in split_ids(value) for thesis_id in selected_thesis_ids)
+        )
+    ]
+    show_table_or_message(
+        related_products[
+            [
+                "product_name",
+                "primary_company_id",
+                "product_category",
+                "description",
+                "launch_status",
+                "related_technology_ids",
+                "related_thesis_ids",
+            ]
+        ],
+        "No products are linked to the selected theses.",
+    )
+
+    st.subheader("Related Company Exposures")
+    related_exposure = company_exposure[
+        company_exposure["thesis_id"].isin(selected_thesis_ids)
+    ]
+    show_table_or_message(
+        related_exposure[
+            [
+                "company_id",
+                "thesis_id",
+                "exposure_level",
+                "exposure_reason",
+                "evidence_id",
+                "last_reviewed",
+            ]
+        ],
+        "No company exposure is linked to the selected theses.",
     )
 
 
@@ -725,6 +806,12 @@ def render_company_detail(
     estimates: pd.DataFrame,
     events: pd.DataFrame,
     theme_exposure: pd.DataFrame,
+    company_exposure: pd.DataFrame,
+    industry_theses: pd.DataFrame,
+    evidence: pd.DataFrame,
+    technologies: pd.DataFrame,
+    products: pd.DataFrame,
+    relationships: pd.DataFrame,
     watchlist: pd.DataFrame,
 ) -> None:
     st.title("Company Detail")
@@ -737,9 +824,149 @@ def render_company_detail(
     company_events = events[events["company_id"] == company_id]
     company_themes = theme_exposure[theme_exposure["company_id"] == company_id]
     company_watchlist = watchlist[watchlist["company_id"] == company_id]
+    company_exposures = company_exposure[company_exposure["company_id"] == company_id]
+    company_evidence = evidence[evidence["related_company_id"] == company_id]
+    company_product_ids = source_ids_for_target(relationships, company_id, "Product")
+    company_technology_ids = source_ids_for_target(relationships, company_id, "Technology")
+    direct_product_ids = products[
+        products["primary_company_id"].fillna("") == company_id
+    ]["product_id"].tolist()
+    product_ids = sorted(set(company_product_ids + direct_product_ids))
+    technology_ids = set(company_technology_ids)
+    for product_id in product_ids:
+        product_row = products[products["product_id"] == product_id]
+        if not product_row.empty:
+            for value in product_row["related_technology_ids"]:
+                technology_ids.update(split_ids(value))
+
+    st.subheader("Why this company?")
+    st.write(company["description"])
+
+    profile_summary = pd.DataFrame(
+        {
+            "Field": [
+                "Ticker",
+                "Exchange",
+                "Country",
+                "Sector",
+                "AI infrastructure category",
+            ],
+            "Value": [
+                company["ticker"],
+                company["exchange"],
+                company["country"],
+                company["sector"],
+                company["ai_infra_category"],
+            ],
+        }
+    )
+    st.dataframe(profile_summary, use_container_width=True, hide_index=True)
+
+    st.write("Watchlist / portfolio context")
+    watchlist_context = company_watchlist[
+        ["priority", "current_position", "thesis", "risk", "next_check"]
+    ]
+    show_table_or_message(watchlist_context, "No watchlist context for this company.")
+
+    st.write("Industry thesis exposure")
+    exposure_view = company_exposures.merge(
+        industry_theses[
+            [
+                "thesis_id",
+                "industry_layer",
+                "thesis_category",
+                "thesis_title",
+                "status",
+                "conviction",
+            ]
+        ],
+        on="thesis_id",
+        how="left",
+    )
+    show_table_or_message(
+        exposure_view[
+            [
+                "industry_layer",
+                "thesis_category",
+                "thesis_title",
+                "exposure_level",
+                "exposure_reason",
+                "evidence_id",
+                "status",
+                "conviction",
+            ]
+        ],
+        "No industry thesis exposure for this company.",
+    )
+
+    st.write("Supporting or challenging evidence")
+    show_table_or_message(
+        company_evidence[
+            [
+                "date",
+                "fact_text",
+                "evidence_summary",
+                "evidence_direction",
+                "confidence",
+                "related_thesis_id",
+                "source_url",
+            ]
+        ],
+        "No evidence linked directly to this company.",
+    )
+
+    st.write("Recent events")
+    show_table_or_message(
+        company_events[
+            [
+                "date",
+                "category",
+                "event_title",
+                "summary",
+                "importance",
+                "thesis_impact",
+                "source_url",
+            ]
+        ].sort_values("date", ascending=False),
+        "No recent events for this company.",
+    )
+
+    st.write("Related technologies")
+    related_technologies = technologies[
+        technologies["technology_id"].isin(sorted(technology_ids))
+    ]
+    show_table_or_message(
+        related_technologies[
+            [
+                "technology_name",
+                "technology_category",
+                "description",
+                "related_thesis_ids",
+                "maturity_stage",
+                "key_companies",
+            ]
+        ],
+        "No related technologies found for this company.",
+    )
+
+    st.write("Related products")
+    related_products = products[products["product_id"].isin(product_ids)]
+    show_table_or_message(
+        related_products[
+            [
+                "product_name",
+                "primary_company_id",
+                "product_category",
+                "description",
+                "launch_status",
+                "related_technology_ids",
+                "related_thesis_ids",
+            ]
+        ],
+        "No related products found for this company.",
+    )
 
     st.subheader(company_name)
-    st.write(company["description"])
     profile = pd.DataFrame(
         {
             "Field": [
@@ -906,9 +1133,9 @@ def main() -> None:
     estimates = load_estimates()
     events = load_ai_infra_events()
     theme_exposure = load_theme_exposure()
+    company_exposure = load_company_exposure()
     watchlist = load_watchlist()
     industry_theses = load_industry_theses()
-    entity_relationships = load_entity_relationships()
     technologies = load_technologies()
     products = load_products()
     evidence = load_evidence()
@@ -948,6 +1175,12 @@ def main() -> None:
             estimates,
             events,
             theme_exposure,
+            company_exposure,
+            industry_theses,
+            evidence,
+            technologies,
+            products,
+            relationships,
             watchlist,
         )
     elif page == "Financial Metrics":
@@ -963,7 +1196,13 @@ def main() -> None:
     elif page == "Watchlist":
         render_watchlist(companies, watchlist)
     elif page == "Industry Thesis":
-        render_industry_thesis(industry_theses, entity_relationships)
+        render_industry_thesis(
+            industry_theses,
+            evidence,
+            technologies,
+            products,
+            company_exposure,
+        )
     elif page == "Technology":
         render_technology_page(technologies)
     elif page == "Product":
