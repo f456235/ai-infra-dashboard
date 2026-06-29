@@ -1,0 +1,13 @@
+relationship_id,source_entity,source_type,relationship_type,target_entity,target_type,notes,importance
+rel_001,NVIDIA,Company,supplies,AI Accelerator,Theme,NVIDIA is the primary merchant GPU and platform supplier for AI clusters.,High
+rel_002,TSMC,Company,enables,Advanced Packaging,Theme,TSMC advanced packaging capacity supports leading AI accelerator production.,High
+rel_003,Micron,Company,supplies,HBM,Theme,Micron participates in HBM and DRAM supply for AI servers.,Medium
+rel_004,Vertiv,Company,enables,Power,Theme,Vertiv provides power and cooling infrastructure for high density data centers.,High
+rel_005,Broadcom,Company,supplies,ASIC,Theme,Broadcom supports custom silicon programs for hyperscale AI customers.,High
+rel_006,AI Accelerator,Theme,requires,HBM,Theme,Accelerators increasingly depend on high bandwidth memory for model training and inference throughput.,High
+rel_007,AI Accelerator,Theme,requires,Advanced Packaging,Theme,Advanced packaging is needed to connect compute dies and HBM efficiently.,High
+rel_008,CSP CapEx,Theme,drives,Power,Theme,Hyperscaler AI capex creates downstream demand for electrical infrastructure.,High
+rel_009,AI Data Center,Concept,requires,Cooling,Theme,Higher rack densities increase the importance of liquid and advanced thermal management.,High
+rel_010,Networking,Theme,enables,AI Accelerator,Theme,High performance networking keeps accelerator clusters utilized.,Medium
+rel_011,Supermicro,Company,supplies,Industrial PC,Theme,Supermicro sells server platforms used in AI infrastructure deployments.,Medium
+rel_012,AMD,Company,competes_with,NVIDIA,Company,AMD competes with NVIDIA in AI accelerators and CPUs for data center workloads.,Medium

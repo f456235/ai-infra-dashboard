@@ -20,6 +20,7 @@ automated updates.
 - Watchlist page with priority and current-position filters.
 - Company Detail page for single-company research.
 - Multi-company trend charts with short chart captions and optional secondary metrics.
+- Industry Thesis page for CSV-based theses and entity relationships.
 
 ## Project Structure
 
@@ -36,7 +37,9 @@ ai-infra-dashboard/
 │   ├── estimates.csv
 │   ├── ai_infra_events.csv
 │   ├── theme_exposure.csv
-│   └── watchlist.csv
+│   ├── watchlist.csv
+│   ├── industry_theses.csv
+│   └── entity_relationships.csv
 └── src/
     ├── data_loader.py
     └── charts.py
@@ -67,6 +70,8 @@ The app reads these files from `data/`:
 - `ai_infra_events.csv`
 - `theme_exposure.csv`
 - `watchlist.csv`
+- `industry_theses.csv`
+- `entity_relationships.csv`
 
 Required columns are validated in `src/data_loader.py`. If a required file or
 column is missing, the app displays a clear Streamlit error message.
@@ -80,4 +85,6 @@ column is missing, the app displays a clear Streamlit error message.
 - Add thesis events to `data/ai_infra_events.csv`.
 - Add or adjust theme mappings in `data/theme_exposure.csv`.
 - Add watchlist notes to `data/watchlist.csv`.
+- Add thesis notes to `data/industry_theses.csv`.
+- Add simple knowledge links to `data/entity_relationships.csv`.
 - Add reusable charts in `src/charts.py`.

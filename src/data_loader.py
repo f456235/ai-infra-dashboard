@@ -83,6 +83,29 @@ WATCHLIST_COLUMNS = [
     "next_check",
 ]
 
+INDUSTRY_THESIS_COLUMNS = [
+    "thesis_id",
+    "theme",
+    "thesis_title",
+    "thesis_summary",
+    "key_drivers",
+    "risks",
+    "status",
+    "conviction",
+    "last_reviewed",
+]
+
+ENTITY_RELATIONSHIP_COLUMNS = [
+    "relationship_id",
+    "source_entity",
+    "source_type",
+    "relationship_type",
+    "target_entity",
+    "target_type",
+    "notes",
+    "importance",
+]
+
 
 def validate_columns(data: pd.DataFrame, required_columns: list[str], filename: str) -> None:
     missing_columns = [column for column in required_columns if column not in data.columns]
@@ -160,3 +183,13 @@ def load_theme_exposure() -> pd.DataFrame:
 def load_watchlist() -> pd.DataFrame:
     data = load_csv("watchlist.csv", WATCHLIST_COLUMNS, ["next_check"])
     return data.sort_values(["priority", "next_check"])
+
+
+def load_industry_theses() -> pd.DataFrame:
+    data = load_csv("industry_theses.csv", INDUSTRY_THESIS_COLUMNS, ["last_reviewed"])
+    return data.sort_values(["theme", "thesis_id"])
+
+
+def load_entity_relationships() -> pd.DataFrame:
+    data = load_csv("entity_relationships.csv", ENTITY_RELATIONSHIP_COLUMNS)
+    return data.sort_values(["source_entity", "relationship_type", "target_entity"])

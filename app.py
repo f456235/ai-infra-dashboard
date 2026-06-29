@@ -17,8 +17,10 @@ from src.charts import (
 from src.data_loader import (
     load_ai_infra_events,
     load_companies,
+    load_entity_relationships,
     load_estimates,
     load_financial_metrics,
+    load_industry_theses,
     load_theme_exposure,
     load_valuation_metrics,
     load_watchlist,
@@ -435,6 +437,94 @@ def render_watchlist(companies: pd.DataFrame, watchlist: pd.DataFrame) -> None:
     )
 
 
+def render_industry_thesis(
+    industry_theses: pd.DataFrame,
+    entity_relationships: pd.DataFrame,
+) -> None:
+    st.title("Industry Thesis")
+
+    st.subheader("Industry Theses")
+    theme = st.multiselect(
+        "Theme",
+        sorted(industry_theses["theme"].unique()),
+        default=sorted(industry_theses["theme"].unique()),
+    )
+    status = st.multiselect(
+        "Status",
+        sorted(industry_theses["status"].unique()),
+        default=sorted(industry_theses["status"].unique()),
+    )
+    conviction = st.multiselect(
+        "Conviction",
+        sorted(industry_theses["conviction"].unique()),
+        default=sorted(industry_theses["conviction"].unique()),
+    )
+
+    filtered_theses = industry_theses[
+        industry_theses["theme"].isin(theme)
+        & industry_theses["status"].isin(status)
+        & industry_theses["conviction"].isin(conviction)
+    ]
+    show_table_or_message(
+        filtered_theses[
+            [
+                "theme",
+                "thesis_title",
+                "thesis_summary",
+                "key_drivers",
+                "risks",
+                "status",
+                "conviction",
+                "last_reviewed",
+            ]
+        ].sort_values(["theme", "conviction", "last_reviewed"]),
+        "No theses match the selected filters.",
+    )
+
+    st.subheader("Entity Relationships")
+    source_type = st.multiselect(
+        "Source type",
+        sorted(entity_relationships["source_type"].unique()),
+        default=sorted(entity_relationships["source_type"].unique()),
+    )
+    relationship_type = st.multiselect(
+        "Relationship type",
+        sorted(entity_relationships["relationship_type"].unique()),
+        default=sorted(entity_relationships["relationship_type"].unique()),
+    )
+    target_type = st.multiselect(
+        "Target type",
+        sorted(entity_relationships["target_type"].unique()),
+        default=sorted(entity_relationships["target_type"].unique()),
+    )
+    importance = st.multiselect(
+        "Relationship importance",
+        sorted(entity_relationships["importance"].unique()),
+        default=sorted(entity_relationships["importance"].unique()),
+    )
+
+    filtered_relationships = entity_relationships[
+        entity_relationships["source_type"].isin(source_type)
+        & entity_relationships["relationship_type"].isin(relationship_type)
+        & entity_relationships["target_type"].isin(target_type)
+        & entity_relationships["importance"].isin(importance)
+    ]
+    show_table_or_message(
+        filtered_relationships[
+            [
+                "source_entity",
+                "source_type",
+                "relationship_type",
+                "target_entity",
+                "target_type",
+                "importance",
+                "notes",
+            ]
+        ],
+        "No relationships match the selected filters.",
+    )
+
+
 def render_company_detail(
     companies: pd.DataFrame,
     financials: pd.DataFrame,
@@ -624,6 +714,8 @@ def main() -> None:
     events = load_ai_infra_events()
     theme_exposure = load_theme_exposure()
     watchlist = load_watchlist()
+    industry_theses = load_industry_theses()
+    entity_relationships = load_entity_relationships()
 
     st.sidebar.title("AI Infrastructure")
     page = st.sidebar.radio(
@@ -638,6 +730,7 @@ def main() -> None:
             "Events",
             "Theme Exposure",
             "Watchlist",
+            "Industry Thesis",
         ],
         label_visibility="collapsed",
     )
@@ -666,8 +759,10 @@ def main() -> None:
         render_events(companies, events)
     elif page == "Theme Exposure":
         render_theme_exposure(companies, theme_exposure)
-    else:
+    elif page == "Watchlist":
         render_watchlist(companies, watchlist)
+    else:
+        render_industry_thesis(industry_theses, entity_relationships)
 
 
 if __name__ == "__main__":

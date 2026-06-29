@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a local Streamlit dashboard for tracking AI infrastructure companies, financial metrics, valuation, market expectations, industry events, and a personal watchlist.
+Build a local Streamlit dashboard for tracking AI infrastructure companies, financial metrics, valuation, market expectations, industry events, a personal watchlist, and a simple knowledge foundation.
 
 The dashboard is for personal research and investment tracking. It should help answer:
 
@@ -157,6 +157,37 @@ Columns:
 * risk
 * next_check
 
+### 8. industry_theses.csv
+
+Research theses about AI infrastructure themes.
+
+Columns:
+
+* thesis_id
+* theme
+* thesis_title
+* thesis_summary
+* key_drivers
+* risks
+* status
+* conviction
+* last_reviewed
+
+### 9. entity_relationships.csv
+
+Simple relationships between companies, themes, suppliers, customers, and infrastructure concepts.
+
+Columns:
+
+* relationship_id
+* source_entity
+* source_type
+* relationship_type
+* target_entity
+* target_type
+* notes
+* importance
+
 ## Pages
 
 ### 1. Overview
@@ -298,6 +329,24 @@ Chart design:
 * Move CapEx, operating margin, inventory, and price-to-sales into optional chart selectors
 * Keep the implementation simple
 
+### 11. Knowledge Foundation
+
+Create the first version of the knowledge layer for AI infrastructure research.
+
+Requirements:
+
+* Store industry theses in industry_theses.csv
+* Store entity relationships in entity_relationships.csv
+* Add an Industry Thesis page
+* Show industry theses with filters for theme, status, and conviction
+* Show related entity relationships with filters for source type, relationship type, target type, and importance
+* Keep the format CSV-based and easy to edit
+* Do not implement an LLM agent
+* Do not implement automatic news analysis
+* Do not implement a recommendation engine
+* Do not implement a graph database
+* Do not implement complex visualization
+
 ## Code Requirements
 
 * Keep code simple and beginner-friendly
@@ -327,7 +376,9 @@ ai-infra-dashboard/
 │   ├── estimates.csv
 │   ├── ai_infra_events.csv
 │   ├── theme_exposure.csv
-│   └── watchlist.csv
+│   ├── watchlist.csv
+│   ├── industry_theses.csv
+│   └── entity_relationships.csv
 └── src/
     ├── data_loader.py
     └── charts.py
