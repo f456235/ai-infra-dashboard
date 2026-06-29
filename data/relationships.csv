@@ -1,0 +1,15 @@
+relationship_id,source_id,source_type,relationship_type,target_id,target_type,reason,confidence,evidence_id,last_updated
+rel_v07_001,prod_gb300,Product,uses,tech_hbm4e,Technology,GB300-class platforms are expected to require high bandwidth memory for accelerator performance.,Medium,ev_001,2025-10-12
+rel_v07_002,prod_gb300,Product,uses,tech_nvlink,Technology,NVIDIA rack-scale accelerator platforms rely on high speed GPU interconnect to scale performance.,High,ev_001,2025-10-12
+rel_v07_003,tech_hbm4e,Technology,belongs_to,thesis_003,Industry Thesis,HBM4e is directly tied to the memory thesis because it increases memory content and bandwidth in AI accelerators.,High,ev_003,2025-10-12
+rel_v07_004,tech_cowos,Technology,belongs_to,thesis_002,Industry Thesis,CoWoS is a core advanced packaging technology for accelerator and HBM integration.,High,ev_002,2025-10-10
+rel_v07_005,tech_liquid_cooling,Technology,belongs_to,thesis_005,Industry Thesis,Liquid cooling adoption is tied to higher rack density and thermal limits.,High,ev_004,2025-09-25
+rel_v07_006,nvda,Company,exposes_to,thesis_001,Industry Thesis,NVIDIA has direct exposure to accelerator demand through GPU platforms and networking.,High,ev_001,2025-10-02
+rel_v07_007,mu,Company,exposes_to,thesis_003,Industry Thesis,Micron has exposure to HBM and DRAM content growth in AI servers.,Medium,ev_003,2025-09-05
+rel_v07_008,tsm,Company,exposes_to,thesis_002,Industry Thesis,TSMC manufactures leading edge accelerators and provides advanced packaging capacity.,High,ev_002,2025-09-18
+rel_v07_009,vertiv,Company,exposes_to,thesis_004,Industry Thesis,Vertiv sells power and cooling equipment used in high density data centers.,High,ev_004,2025-08-20
+rel_v07_010,prod_liquid_cooled_rack,Product,requires,tech_liquid_cooling,Technology,High density AI rack systems require advanced thermal management.,High,ev_005,2025-08-28
+rel_v07_011,avgo,Company,exposes_to,thesis_007,Industry Thesis,Broadcom participates in custom AI silicon programs for hyperscale customers.,High,ev_007,2025-09-12
+rel_v07_012,on,Company,exposes_to,thesis_008,Industry Thesis,ON Semiconductor may benefit if AI rack power growth increases power semiconductor demand.,Low,ev_008,2025-09-15
+rel_v07_013,delta,Company,exposes_to,thesis_004,Industry Thesis,Delta Electronics may benefit from power and thermal infrastructure demand in AI data centers.,Low,ev_008,2025-09-15
+rel_v07_014,ev_006,Evidence,challenges,thesis_001,Industry Thesis,Hyperscaler ASIC efforts may reduce some merchant accelerator growth assumptions.,Medium,ev_006,2025-08-11

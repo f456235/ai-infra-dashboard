@@ -74,6 +74,16 @@ THEME_EXPOSURE_COLUMNS = [
     "notes",
 ]
 
+COMPANY_EXPOSURE_COLUMNS = [
+    "exposure_id",
+    "company_id",
+    "thesis_id",
+    "exposure_level",
+    "exposure_reason",
+    "evidence_id",
+    "last_reviewed",
+]
+
 WATCHLIST_COLUMNS = [
     "company_id",
     "priority",
@@ -85,7 +95,8 @@ WATCHLIST_COLUMNS = [
 
 INDUSTRY_THESIS_COLUMNS = [
     "thesis_id",
-    "theme",
+    "industry_layer",
+    "thesis_category",
     "thesis_title",
     "thesis_summary",
     "key_drivers",
@@ -93,6 +104,58 @@ INDUSTRY_THESIS_COLUMNS = [
     "status",
     "conviction",
     "last_reviewed",
+]
+
+TECHNOLOGY_COLUMNS = [
+    "technology_id",
+    "technology_name",
+    "technology_category",
+    "description",
+    "related_thesis_ids",
+    "maturity_stage",
+    "key_companies",
+    "last_reviewed",
+]
+
+PRODUCT_COLUMNS = [
+    "product_id",
+    "product_name",
+    "primary_company_id",
+    "product_category",
+    "description",
+    "launch_status",
+    "related_technology_ids",
+    "related_thesis_ids",
+    "last_reviewed",
+]
+
+RELATIONSHIP_COLUMNS = [
+    "relationship_id",
+    "source_id",
+    "source_type",
+    "relationship_type",
+    "target_id",
+    "target_type",
+    "reason",
+    "confidence",
+    "evidence_id",
+    "last_updated",
+]
+
+EVIDENCE_COLUMNS = [
+    "evidence_id",
+    "date",
+    "fact_text",
+    "evidence_title",
+    "evidence_summary",
+    "source_type",
+    "source_url",
+    "related_event_id",
+    "related_company_id",
+    "related_thesis_id",
+    "evidence_direction",
+    "confidence",
+    "notes",
 ]
 
 ENTITY_RELATIONSHIP_COLUMNS = [
@@ -180,6 +243,11 @@ def load_theme_exposure() -> pd.DataFrame:
     return data.sort_values(["theme", "company_id"])
 
 
+def load_company_exposure() -> pd.DataFrame:
+    data = load_csv("company_exposure.csv", COMPANY_EXPOSURE_COLUMNS, ["last_reviewed"])
+    return data.sort_values(["company_id", "thesis_id"])
+
+
 def load_watchlist() -> pd.DataFrame:
     data = load_csv("watchlist.csv", WATCHLIST_COLUMNS, ["next_check"])
     return data.sort_values(["priority", "next_check"])
@@ -187,9 +255,29 @@ def load_watchlist() -> pd.DataFrame:
 
 def load_industry_theses() -> pd.DataFrame:
     data = load_csv("industry_theses.csv", INDUSTRY_THESIS_COLUMNS, ["last_reviewed"])
-    return data.sort_values(["theme", "thesis_id"])
+    return data.sort_values(["industry_layer", "thesis_category", "thesis_id"])
 
 
 def load_entity_relationships() -> pd.DataFrame:
     data = load_csv("entity_relationships.csv", ENTITY_RELATIONSHIP_COLUMNS)
     return data.sort_values(["source_entity", "relationship_type", "target_entity"])
+
+
+def load_technologies() -> pd.DataFrame:
+    data = load_csv("technologies.csv", TECHNOLOGY_COLUMNS, ["last_reviewed"])
+    return data.sort_values(["technology_category", "technology_name"])
+
+
+def load_products() -> pd.DataFrame:
+    data = load_csv("products.csv", PRODUCT_COLUMNS, ["last_reviewed"])
+    return data.sort_values(["product_category", "product_name"])
+
+
+def load_relationships() -> pd.DataFrame:
+    data = load_csv("relationships.csv", RELATIONSHIP_COLUMNS, ["last_updated"])
+    return data.sort_values(["source_type", "source_id", "relationship_type"])
+
+
+def load_evidence() -> pd.DataFrame:
+    data = load_csv("evidence.csv", EVIDENCE_COLUMNS, ["date"])
+    return data.sort_values("date", ascending=False)

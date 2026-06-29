@@ -1,0 +1,8 @@
+technology_id,technology_name,technology_category,description,related_thesis_ids,maturity_stage,key_companies,last_reviewed
+tech_hbm4e,HBM4e,Memory,Next generation high bandwidth memory expected to increase memory bandwidth and capacity for AI accelerators.,thesis_003,Emerging,Micron; SK hynix; Samsung; NVIDIA,2025-10-12
+tech_cowos,CoWoS,Advanced Packaging,Chip-on-wafer-on-substrate packaging used to integrate accelerators with HBM for high performance AI systems.,thesis_002,Scaling,TSMC; NVIDIA; Broadcom; AMD,2025-10-10
+tech_liquid_cooling,Liquid Cooling,Cooling,Thermal management approach increasingly used for high density AI racks where air cooling becomes insufficient.,thesis_005,Adoption,Vertiv; Supermicro; Delta Electronics,2025-09-25
+tech_nvlink,NVLink,Interconnect,NVIDIA high speed interconnect technology used to connect GPUs within AI servers and clusters.,thesis_001; thesis_006,Mature,NVIDIA; Supermicro,2025-10-02
+tech_sic,SiC Power Semiconductor,Power Semiconductor,Silicon carbide power devices that can improve power conversion efficiency in demanding electrical systems.,thesis_008,Adoption,ON Semiconductor; Wolfspeed; STMicroelectronics,2025-09-15
+tech_gan,GaN Power Semiconductor,Power Semiconductor,Gallium nitride power devices used for high efficiency and high frequency power conversion.,thesis_008,Emerging,Navitas; Infineon; Texas Instruments,2025-09-15
+tech_power_shelf,AI Rack Power Shelf,Power Infrastructure,Power distribution architecture used in high density AI racks to deliver reliable power to accelerators and servers.,thesis_004; thesis_008,Adoption,Vertiv; Delta Electronics; Lite-On,2025-09-28

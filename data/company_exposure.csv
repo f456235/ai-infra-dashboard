@@ -1,0 +1,12 @@
+exposure_id,company_id,thesis_id,exposure_level,exposure_reason,evidence_id,last_reviewed
+exp_001,nvda,thesis_001,High,NVIDIA directly supplies accelerator platforms and networking for AI training and inference clusters.,ev_001,2025-10-15
+exp_002,nvda,thesis_006,High,NVIDIA networking and interconnect technologies support large accelerator cluster utilization.,ev_001,2025-10-15
+exp_003,tsm,thesis_002,High,TSMC advanced packaging and leading edge manufacturing are critical to AI accelerator supply.,ev_002,2025-10-10
+exp_004,mu,thesis_003,High,Micron participates in HBM and DRAM supply where AI server memory content is rising.,ev_003,2025-10-05
+exp_005,vertiv,thesis_004,High,Vertiv sells power and cooling systems used in high density AI data centers.,ev_004,2025-09-28
+exp_006,vertiv,thesis_005,High,Vertiv has direct exposure to cooling and thermal infrastructure for AI data centers.,ev_004,2025-09-25
+exp_007,smci,thesis_005,Medium,Supermicro sells liquid cooled AI server rack systems but execution and inventory quality need monitoring.,ev_005,2025-09-25
+exp_008,avgo,thesis_007,High,Broadcom has custom AI silicon exposure through hyperscale customer programs.,ev_007,2025-09-18
+exp_009,amd,thesis_001,Medium,AMD participates in accelerator demand as a second-source supplier and roadmap competitor.,ev_006,2025-09-25
+exp_010,on,thesis_008,Watchlist,ON Semiconductor may have indirect exposure to AI server power semiconductor demand; evidence quality is still low.,ev_008,2025-09-15
+exp_011,delta,thesis_004,Watchlist,Delta Electronics may have exposure to AI data center power and thermal infrastructure; needs company-specific validation.,ev_008,2025-09-15

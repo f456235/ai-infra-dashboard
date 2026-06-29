@@ -1,0 +1,8 @@
+product_id,product_name,primary_company_id,product_category,description,launch_status,related_technology_ids,related_thesis_ids,last_reviewed
+prod_gb300,GB300,nvda,AI Accelerator Platform,NVIDIA AI accelerator platform expected to combine next generation GPUs memory and rack-scale system design.,Announced,tech_hbm4e; tech_nvlink; tech_liquid_cooling,thesis_001; thesis_003; thesis_005,2025-10-12
+prod_blackwell,Blackwell,nvda,AI Accelerator Architecture,NVIDIA GPU architecture for AI training and inference platforms.,Shipping,tech_nvlink; tech_cowos,thesis_001; thesis_002; thesis_006,2025-10-02
+prod_rubin,Rubin,nvda,AI Accelerator Architecture,NVIDIA future GPU architecture expected to extend AI compute roadmap beyond Blackwell.,Roadmap,tech_hbm4e; tech_nvlink,thesis_001; thesis_003,2025-09-30
+prod_mi400,MI400,amd,AI Accelerator Platform,AMD future accelerator platform expected to compete for large scale AI training and inference workloads.,Roadmap,tech_hbm4e; tech_cowos,thesis_001; thesis_002,2025-09-25
+prod_custom_asic,avgo,AI Custom ASIC Platform,Broadcom custom silicon programs for hyperscale AI workloads and networking-heavy deployments.,Shipping,tech_cowos,thesis_007; thesis_002,2025-09-12
+prod_liquid_cooled_rack,AI Liquid-Cooled Rack,smci,AI Server Rack,High density AI server rack design using liquid cooling to support accelerator clusters.,Shipping,tech_liquid_cooling; tech_power_shelf,thesis_005; thesis_004,2025-08-28
+prod_power_shelf_ref,AI Power Shelf Reference Design,,Power Infrastructure,Vendor-neutral power shelf architecture concept for high density AI racks.,Concept,tech_power_shelf; tech_sic; tech_gan,thesis_004; thesis_008,2025-09-15

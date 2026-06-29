@@ -1,17 +1,27 @@
-# AI Infrastructure Dashboard MVP Spec
+# AI Infrastructure Research Platform Spec
 
-## Goal
+## Project Goal
 
-Build a local Streamlit dashboard for tracking AI infrastructure companies, financial metrics, valuation, market expectations, industry events, a personal watchlist, and a simple knowledge foundation.
+Build a local-first AI infrastructure research workspace.
 
-The dashboard is for personal research and investment tracking. It should help answer:
+The project is no longer only a financial dashboard. The dashboard remains useful, but the next phase is to organize research knowledge around companies, industry theses, technologies, products, events, evidence, market indicators, and watchlist / portfolio context.
 
-* Which AI infrastructure themes are improving?
-* Which companies have improving fundamentals?
-* Which companies are expensive or cheap relative to expectations?
-* What recent events may affect the investment thesis?
+The platform should help answer:
 
-## Stack
+* What changed in the AI infrastructure ecosystem?
+* Which industry thesis is affected?
+* Which companies are exposed?
+* What evidence supports, weakens, or challenges a thesis?
+* Why does this company matter under the current industry thesis?
+* What should be reviewed next?
+
+The platform should assist research thinking. It should not replace the user's judgement.
+
+## Current Architecture Assumptions
+
+The current implementation is a local Streamlit app backed by manually editable CSV files.
+
+Current stack:
 
 * Python 3.11+
 * Streamlit
@@ -19,25 +29,30 @@ The dashboard is for personal research and investment tracking. It should help a
 * Plotly
 * CSV files as the data source
 
-## Scope
+Current architecture:
 
-This is an MVP.
+* `app.py` contains the Streamlit pages and page-level UI functions.
+* `src/data_loader.py` contains reusable CSV loading and required-column validation.
+* `src/charts.py` contains reusable Plotly chart helpers.
+* `data/` contains all local research data.
 
-Do not implement:
+Near-term architecture rule:
 
-* External APIs
-* Web crawlers
-* Databases
-* Login system
-* Automated data updates
+* Keep the app simple and reviewable.
+* Keep data local and manually editable.
+* Keep schemas explicit.
+* Keep facts, evidence, relationships, and theses separate.
+* Do not introduce databases, agents, APIs, or background automation in v0.7.
 
 ## Data Files
 
-Create a `data/` folder with the following CSV files.
+The app should use CSV files in `data/`.
 
-### 1. companies.csv
+### Existing Files
 
-Static company information only.
+#### companies.csv
+
+Static company profile data.
 
 Columns:
 
@@ -51,9 +66,9 @@ Columns:
 * website
 * description
 
-### 2. financial_metrics.csv
+#### financial_metrics.csv
 
-Quarterly financial data.
+Quarterly company financial metrics.
 
 Columns:
 
@@ -70,9 +85,9 @@ Columns:
 * free_cash_flow_usd_m
 * inventory_usd_m
 
-### 3. valuation_metrics.csv
+#### valuation_metrics.csv
 
-Valuation data by date.
+Valuation metrics by date.
 
 Columns:
 
@@ -85,7 +100,7 @@ Columns:
 * price_to_sales
 * ev_to_ebitda
 
-### 4. estimates.csv
+#### estimates.csv
 
 Market consensus estimates.
 
@@ -100,9 +115,9 @@ Columns:
 * analyst_count
 * revision_direction
 
-### 5. ai_infra_events.csv
+#### ai_infra_events.csv
 
-News, earnings call notes, pricing updates, supply chain events, and thesis-related events.
+Events, news, earnings call notes, product announcements, pricing updates, and supply chain developments.
 
 Columns:
 
@@ -116,37 +131,52 @@ Columns:
 * importance
 * thesis_impact
 
-### 6. theme_exposure.csv
+#### industry_theses.csv
 
-Company exposure to AI infrastructure themes.
+Industry thesis records. Refine this file if needed for v0.7.
 
-Columns:
+Minimum columns:
 
+* thesis_id
+* industry_layer
+* thesis_category
+* thesis_title
+* thesis_summary
+* key_drivers
+* risks
+* status
+* conviction
+* last_reviewed
+
+Optional v0.7 columns:
+
+* thesis_type
+* review_frequency
+* owner
+* key_questions
+
+#### company_exposure.csv
+
+Company-to-industry-thesis exposure file.
+
+Preferred v0.7 columns:
+
+* exposure_id
 * company_id
-* theme
+* thesis_id
 * exposure_level
-* notes
+* exposure_reason
+* evidence_id
+* last_reviewed
 
-Valid themes include:
+Migration note:
 
-* CSP CapEx
-* AI Accelerator
-* ASIC
-* HBM
-* DRAM
-* NAND
-* Foundry
-* Advanced Packaging
-* Power
-* Cooling
-* PCB/CCL
-* BBU/UPS
-* Networking
-* Industrial PC
+* The existing `theme_exposure.csv` can be migrated or renamed to `company_exposure.csv`.
+* Old `theme` values should map to `industry_theses.industry_layer` or `industry_theses.thesis_category`.
 
-### 7. watchlist.csv
+#### watchlist.csv
 
-Personal tracking notes for companies under active review.
+Personal research and portfolio context.
 
 Columns:
 
@@ -157,27 +187,11 @@ Columns:
 * risk
 * next_check
 
-### 8. industry_theses.csv
+#### entity_relationships.csv
 
-Research theses about AI infrastructure themes.
+Existing simple relationship file. In v0.7, replace or refine this into the more general `relationships.csv`.
 
-Columns:
-
-* thesis_id
-* theme
-* thesis_title
-* thesis_summary
-* key_drivers
-* risks
-* status
-* conviction
-* last_reviewed
-
-### 9. entity_relationships.csv
-
-Simple relationships between companies, themes, suppliers, customers, and infrastructure concepts.
-
-Columns:
+Current columns:
 
 * relationship_id
 * source_entity
@@ -188,224 +202,346 @@ Columns:
 * notes
 * importance
 
+### New v0.7 Files
+
+#### technologies.csv
+
+Technology entities such as HBM, CoWoS, NVLink, CPO, liquid cooling, SiC, GaN, or power shelf architecture.
+
+Columns:
+
+* technology_id
+* technology_name
+* technology_category
+* description
+* related_thesis_ids
+* maturity_stage
+* key_companies
+* last_reviewed
+
+Relationship note:
+
+* `related_thesis_ids` is acceptable for simple display.
+* The primary source of technology-to-thesis links should be `relationships.csv`.
+
+#### products.csv
+
+Product, platform, architecture, or system entities such as GB300, Blackwell, Rubin, MI300, TPU, AI server racks, or liquid-cooled rack systems.
+
+Columns:
+
+* product_id
+* product_name
+* primary_company_id
+* product_category
+* description
+* launch_status
+* related_technology_ids
+* related_thesis_ids
+* last_reviewed
+
+Ownership note:
+
+* `primary_company_id` may be blank when a product, platform, architecture, or standard is not owned by a single company.
+* Additional product-to-company links should be represented in `relationships.csv`.
+
+#### relationships.csv
+
+General entity relationship table. This should support the first version of the knowledge graph without implementing a graph database.
+
+Columns:
+
+* relationship_id
+* source_id
+* source_type
+* relationship_type
+* target_id
+* target_type
+* reason
+* confidence
+* evidence_id
+* last_updated
+
+Supported first-version entity types:
+
+* Company
+* Industry Thesis
+* Technology
+* Product
+* Event
+* Evidence
+* Market Indicator
+* Watchlist / Portfolio Item
+
+Supported first-version relationship types:
+
+* uses
+* requires
+* belongs_to
+* impacts
+* benefits
+* exposes_to
+* competes_with
+* supplies_to
+* tracked_in
+* supports
+* challenges
+* mentions
+
+#### evidence.csv
+
+Evidence records. Evidence should be observable and source-linked when possible. Evidence is not the same as reasoning or thesis conclusion.
+
+Columns:
+
+* evidence_id
+* date
+* fact_text
+* evidence_title
+* evidence_summary
+* source_type
+* source_url
+* related_event_id
+* related_company_id
+* related_thesis_id
+* evidence_direction
+* confidence
+* notes
+
+Field meaning:
+
+* `fact_text` stores the directly observed fact.
+* `evidence_summary` explains why that fact is relevant to a thesis.
+* `notes` can hold review context or open questions.
+
+Allowed `evidence_direction` values:
+
+* supports
+* weakens
+* challenges
+* neutral
+* needs_review
+
 ## Pages
 
-### 1. Overview
+### Existing Pages
 
-Show:
+Keep existing pages unless a future milestone explicitly removes or merges them.
 
-* Total number of tracked companies
-* Number of tracked themes
-* Recent high-importance events
-* Companies grouped by AI infrastructure category
-* Simple summary of latest financial metrics
+Current pages:
 
-### 2. Companies
+* Overview
+* Companies
+* Company Detail
+* Financial Metrics
+* Valuation
+* Estimates
+* Events
+* Company Exposure
+* Watchlist
+* Industry Thesis
 
-Show a table of companies.
+### v0.7 Page Additions
 
-Requirements:
+#### Technology
 
-* Filter by country
-* Filter by sector
-* Filter by AI infrastructure category
+Purpose:
 
-### 3. Financial Metrics
-
-Show quarterly financial metrics.
-
-Requirements:
-
-* Filter by company
-* Filter by period
-* Show revenue, revenue YoY, EPS, EPS YoY, gross margin, operating margin, capex, free cash flow, and inventory
-* Include at least one Plotly line chart for revenue over time
-
-### 4. Valuation
-
-Show valuation metrics.
+Show technology entities and their links to industry theses and companies.
 
 Requirements:
 
-* Filter by company
-* Show price, market cap, trailing PE, forward PE, price-to-sales, EV/EBITDA
-* Include a table sorted by forward PE
+* Read from `technologies.csv`.
+* Filter by technology category.
+* Filter by maturity stage.
+* Show related thesis ID and key companies.
+* Keep display table-based for v0.7.
 
-### 5. Estimates
+#### Product
 
-Show analyst estimates.
+Purpose:
 
-Requirements:
-
-* Filter by company
-* Filter by period
-* Show estimated revenue, estimated EPS, estimated YoY growth, analyst count, and revision direction
-
-### 6. Events
-
-Show AI infrastructure events.
+Show product, platform, and architecture entities.
 
 Requirements:
 
-* Filter by company
-* Filter by category
-* Filter by importance
-* Filter by thesis impact
-* Show source URL as a clickable link if possible
+* Read from `products.csv`.
+* Filter by company.
+* Filter by product category.
+* Filter by launch status.
+* Show related technology IDs and related thesis IDs.
+* Keep display table-based for v0.7.
 
-### 7. Theme Exposure
+#### Evidence
 
-Show company exposure by AI infrastructure theme.
+Purpose:
 
-Requirements:
-
-* Filter by theme
-* Filter by exposure level
-* Show which companies are exposed to each theme
-
-### 8. Watchlist
-
-Show personal watchlist notes.
+Show evidence records that may support, weaken, challenge, or require review of a thesis.
 
 Requirements:
 
-* Join company_id with company_name for display
-* Filter by priority
-* Filter by current_position
-* Show thesis, risk, and next check date
+* Read from `evidence.csv`.
+* Filter by evidence direction.
+* Filter by related company.
+* Filter by related thesis.
+* Show source URL as a clickable link if possible.
+* Keep evidence separate from conclusions.
 
-### 9. Company Detail
+#### Relationships
 
-Show single-company research details.
+Purpose:
 
-Requirements:
-
-* Select one company by company_name
-* Show company profile from companies.csv
-* Show watchlist notes from watchlist.csv if available
-* Show latest financial metrics from financial_metrics.csv
-* Show latest valuation metrics from valuation_metrics.csv
-* Show estimates from estimates.csv
-* Show theme exposure from theme_exposure.csv
-* Show recent events from ai_infra_events.csv
-* Do not replace the Financial Metrics, Valuation, Estimates, or Events pages
-* Keep Companies as a browse/filter page without clickable company navigation for now
-
-### 10. Better Charts and Company Comparison
-
-Improve the dashboard from static tables into a comparison and trend analysis tool.
+Show explicit connections between entities.
 
 Requirements:
 
-* Add multi-company selection where appropriate
-* Use Plotly line charts
-* Reuse financial_metrics.csv and valuation_metrics.csv
-* Keep existing tables
-* Do not remove existing pages
-* Show revenue trend by default
-* Show revenue YoY trend by default
-* Show EPS trend by default
-* Show gross margin trend by default
-* Show free cash flow trend by default
-* Show forward PE trend by default
-* Offer operating margin, CapEx, inventory, and price-to-sales as optional charts
-* On Financial Metrics, compare multiple companies over time
-* On Valuation, compare forward PE by default and price-to-sales optionally when multiple dates exist
-* On Company Detail, show simple trend charts for the selected company
-* Sort period-based charts chronologically, not alphabetically
+* Read from `relationships.csv`.
+* Filter by source type.
+* Filter by relationship type.
+* Filter by target type.
+* Filter by confidence.
+* Show reason and linked evidence ID.
+* Use a table. Do not build graph visualization in v0.7.
 
-Chart intent:
+#### Industry Thesis
 
-* Revenue trend: demand and business scale
-* Revenue YoY: growth acceleration or deceleration
-* EPS trend: profitability to shareholders
-* Gross margin trend: pricing power and product mix
-* Free cash flow trend: ability to fund growth
-* Forward PE trend: valuation relative to future earnings
+Purpose:
 
-Chart design:
+Continue to show industry theses, but make the page align with the knowledge model.
 
-* Show a short caption above each chart explaining what question it helps answer
-* Move CapEx, operating margin, inventory, and price-to-sales into optional chart selectors
-* Keep the implementation simple
+v0.7 refinements:
 
-### 11. Knowledge Foundation
+* Filter by industry layer.
+* Filter by thesis category.
+* Show related evidence when available.
+* Show related technologies and products when available.
+* Keep theses user-reviewable and manually editable.
+* Do not automatically update thesis text from evidence.
 
-Create the first version of the knowledge layer for AI infrastructure research.
+#### Company Detail
 
-Requirements:
+Purpose:
 
-* Store industry theses in industry_theses.csv
-* Store entity relationships in entity_relationships.csv
-* Add an Industry Thesis page
-* Show industry theses with filters for theme, status, and conviction
-* Show related entity relationships with filters for source type, relationship type, target type, and importance
-* Keep the format CSV-based and easy to edit
-* Do not implement an LLM agent
-* Do not implement automatic news analysis
-* Do not implement a recommendation engine
-* Do not implement a graph database
-* Do not implement complex visualization
+Shift the page from "company facts" toward "Why this company?"
+
+v0.7 refinements:
+
+* Make the first section: "Why this company?"
+* In that first section, show thesis exposure.
+* In that first section, show exposure reason.
+* In that first section, show supporting or challenging evidence.
+* In that first section, show recent events.
+* In that first section, show watchlist priority and next check.
+* Show company profile.
+* Show watchlist / portfolio context.
+* Show industry thesis exposure.
+* Show related evidence.
+* Show related technologies and products.
+* Show recent events.
+* Keep financial and valuation context visible.
+* Emphasize why the company matters under current industry theses.
+
+## v0.7 Implementation Scope
+
+Milestone name:
+
+**v0.7 Knowledge Model Foundation**
+
+Implement only the first simple version of the knowledge model.
+
+Required implementation:
+
+* Add `data/technologies.csv` with sample data.
+* Add `data/products.csv` with sample data.
+* Add `data/relationships.csv` with sample data.
+* Add `data/evidence.csv` with sample data.
+* Refine `data/industry_theses.csv` if needed.
+* Refine or add `data/company_exposure.csv` if needed.
+* Add reusable data loading functions and required-column validation for the new CSV files.
+* Add Technology page.
+* Add Product page.
+* Add Evidence page.
+* Add Relationships page.
+* Refine Industry Thesis page to show knowledge-model context.
+* Refine Company Detail page to emphasize "Why this company?" using industry thesis exposure, exposure reason, evidence, recent events, and watchlist context.
+* Keep all new data manually editable.
+
+Implementation constraints:
+
+* Prefer tables and simple filters.
+* Prefer clear CSV schemas over clever abstractions.
+* Use functions, not classes, unless there is a clear need.
+* Keep code understandable for a beginner Python/Streamlit reader.
+* Keep the current local Streamlit app structure.
+
+## Out Of Scope
+
+Do not implement in v0.7:
+
+* External APIs
+* Web crawlers
+* Autonomous agents
+* LLM agent workflows
+* Automatic news analysis
+* Automatic thesis updates
+* Buy / sell recommendations
+* Recommendation engine
+* Graph database
+* Complex graph visualization
+* Login system
+* Cloud deployment
+* Background jobs
+* Automated data updates
 
 ## Code Requirements
 
-* Keep code simple and beginner-friendly
-* Avoid unnecessary classes
-* Use functions where possible
-* Create reusable data loading functions
-* Validate that required CSV columns exist
-* Display a clear Streamlit error message if a CSV file is missing or columns are missing
+* Keep code simple and beginner-friendly.
+* Avoid unnecessary classes.
+* Use functions where possible.
+* Create reusable data loading functions.
+* Validate that required CSV columns exist.
+* Display a clear Streamlit error message if a CSV file is missing or columns are missing.
+* Keep CSV schemas explicit in `src/data_loader.py`.
+* Keep chart helpers in `src/charts.py`.
+* Keep page logic readable in `app.py`.
 * App should run with:
 
 ```bash
 streamlit run app.py
 ```
 
-## Project Structure
+Testing expectations:
 
-```text
-ai-infra-dashboard/
-├── app.py
-├── README.md
-├── SPEC.md
-├── requirements.txt
-├── data/
-│   ├── companies.csv
-│   ├── financial_metrics.csv
-│   ├── valuation_metrics.csv
-│   ├── estimates.csv
-│   ├── ai_infra_events.csv
-│   ├── theme_exposure.csv
-│   ├── watchlist.csv
-│   ├── industry_theses.csv
-│   └── entity_relationships.csv
-└── src/
-    ├── data_loader.py
-    └── charts.py
-```
+* Run `python -m py_compile app.py src/data_loader.py src/charts.py`.
+* Use Streamlit app testing or manual startup to verify new pages render.
+* Report exactly what checks were run.
 
-## Design Decisions
+## Design Principles
 
-### Decision 1
+### Local First
 
-`companies.csv` should only store static company information.
+All v0.7 data should live in local CSV files.
 
-Reason:
+### Manual And Reviewable
 
-Financial data such as EPS, revenue, PE, and forward PE changes over time, so it belongs in separate time-based metric tables.
+The user should be able to open every data file, understand it, and edit it manually.
 
-### Decision 2
+### Facts Before Reasoning
 
-Use CSV files for the MVP.
+Evidence should store observable facts and source context. Reasoning and thesis conclusions should remain separate.
 
-Reason:
+### Explainable Relationships
 
-The first version should focus on data model, dashboard structure, and usability. APIs, crawlers, and databases can be added later.
+Relationships should include a reason, confidence, and optional evidence link.
 
-### Decision 3
+### Research Before Investment
 
-Do not include GPU utilization, GPU capacity, or estimated power usage in the MVP.
+The platform should support research quality. It should not generate buy or sell recommendations.
 
-Reason:
+### Simple Before Powerful
 
-These data points are difficult to obtain consistently across companies and may reduce data quality.
+Prefer a useful table and filter over a complex visualization or abstraction.
+
+### Preserve Existing Workflows
+
+Existing financial, valuation, event, watchlist, company-exposure, and company-detail workflows should remain usable while the knowledge model is added.
