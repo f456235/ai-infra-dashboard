@@ -158,6 +158,21 @@ EVIDENCE_COLUMNS = [
     "notes",
 ]
 
+RESEARCH_ACTION_COLUMNS = [
+    "action_id",
+    "created_date",
+    "action_title",
+    "related_company_id",
+    "related_thesis_id",
+    "related_evidence_id",
+    "priority",
+    "status",
+    "reason",
+    "next_step",
+    "due_date",
+    "last_updated",
+]
+
 ENTITY_RELATIONSHIP_COLUMNS = [
     "relationship_id",
     "source_entity",
@@ -281,3 +296,12 @@ def load_relationships() -> pd.DataFrame:
 def load_evidence() -> pd.DataFrame:
     data = load_csv("evidence.csv", EVIDENCE_COLUMNS, ["date"])
     return data.sort_values("date", ascending=False)
+
+
+def load_research_actions() -> pd.DataFrame:
+    data = load_csv(
+        "research_actions.csv",
+        RESEARCH_ACTION_COLUMNS,
+        ["created_date", "due_date", "last_updated"],
+    )
+    return data.sort_values(["status", "priority", "due_date"])

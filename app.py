@@ -24,6 +24,7 @@ from src.data_loader import (
     load_industry_theses,
     load_products,
     load_relationships,
+    load_research_actions,
     load_technologies,
     load_theme_exposure,
     load_valuation_metrics,
@@ -94,6 +95,19 @@ def filter_values(data: pd.DataFrame, column: str) -> list[str]:
     return sorted(data[column].fillna("").astype(str).unique())
 
 
+def sort_research_actions(actions: pd.DataFrame) -> pd.DataFrame:
+    priority_order = {"High": 0, "Medium": 1, "Low": 2}
+    status_order = {"Open": 0, "In Progress": 1, "Waiting": 2, "Done": 3, "Archived": 4}
+    sorted_actions = actions.copy()
+    sorted_actions["_priority_order"] = (
+        sorted_actions["priority"].map(priority_order).fillna(99)
+    )
+    sorted_actions["_status_order"] = sorted_actions["status"].map(status_order).fillna(99)
+    return sorted_actions.sort_values(
+        ["_status_order", "_priority_order", "due_date"]
+    ).drop(columns=["_priority_order", "_status_order"])
+
+
 def split_ids(value) -> list[str]:
     if pd.isna(value) or value == "":
         return []
@@ -131,6 +145,39 @@ def source_ids_for_target(
 def show_chart(caption: str, chart) -> None:
     st.caption(caption)
     st.plotly_chart(chart, use_container_width=True)
+
+
+def show_evidence_cards(evidence_items: pd.DataFrame, empty_message: str) -> None:
+    if evidence_items.empty:
+        st.info(empty_message)
+        return
+
+    for _, item in evidence_items.sort_values("date", ascending=False).iterrows():
+        direction = str(item["evidence_direction"])
+        confidence = str(item["confidence"])
+        title = f"{item['evidence_title']} - {direction} / {confidence}"
+        expanded = direction in ["needs_review", "challenges"]
+
+        with st.expander(title, expanded=expanded):
+            if expanded:
+                st.warning(f"{direction} evidence needs attention.")
+            else:
+                st.markdown(f"**Direction:** `{direction}`  **Confidence:** `{confidence}`")
+
+            st.markdown(f"**Date:** {item['date']}")
+            st.markdown("**Observed fact**")
+            st.write(item["fact_text"])
+            st.markdown("**Evidence interpretation**")
+            st.write(item["evidence_summary"])
+            st.markdown(
+                f"**Company:** `{item['related_company_id']}`  "
+                f"**Thesis:** `{item['related_thesis_id']}`"
+            )
+            if pd.notna(item["source_url"]) and str(item["source_url"]).strip():
+                st.markdown(f"[Source]({item['source_url']})")
+            if pd.notna(item["notes"]) and str(item["notes"]).strip():
+                st.markdown("**Notes**")
+                st.write(item["notes"])
 
 
 OPTIONAL_FINANCIAL_CHARTS = {
@@ -695,7 +742,7 @@ def render_product_page(products: pd.DataFrame) -> None:
 
 
 def render_evidence_page(evidence: pd.DataFrame) -> None:
-    st.title("Evidence")
+    st.title("Evidence Inbox")
 
     evidence_direction = st.multiselect(
         "Evidence direction",
@@ -724,6 +771,24 @@ def render_evidence_page(evidence: pd.DataFrame) -> None:
         & evidence["related_thesis_id"].astype(str).isin(related_thesis_id)
         & evidence["confidence"].astype(str).isin(confidence)
     ]
+    attention_evidence = filtered[
+        filtered["evidence_direction"].isin(["needs_review", "challenges"])
+    ]
+
+    st.subheader("Needs Review / Challenges")
+    show_evidence_cards(
+        attention_evidence,
+        "No needs_review or challenges evidence matches the selected filters.",
+    )
+
+    st.subheader("Evidence Inbox")
+    remaining_evidence = filtered.drop(attention_evidence.index)
+    show_evidence_cards(
+        remaining_evidence,
+        "No other evidence records match the selected filters.",
+    )
+
+    st.subheader("Table View")
     evidence_view = filtered[
         [
             "date",
@@ -799,6 +864,175 @@ def render_relationships_page(relationships: pd.DataFrame) -> None:
     )
 
 
+def render_research_actions(research_actions: pd.DataFrame) -> None:
+    st.title("Research Actions")
+
+    priority = st.multiselect(
+        "Priority",
+        filter_values(research_actions, "priority"),
+        default=filter_values(research_actions, "priority"),
+    )
+    status = st.multiselect(
+        "Status",
+        filter_values(research_actions, "status"),
+        default=filter_values(research_actions, "status"),
+    )
+    related_company_id = st.multiselect(
+        "Related company ID",
+        filter_values(research_actions, "related_company_id"),
+        default=filter_values(research_actions, "related_company_id"),
+    )
+    related_thesis_id = st.multiselect(
+        "Related thesis ID",
+        filter_values(research_actions, "related_thesis_id"),
+        default=filter_values(research_actions, "related_thesis_id"),
+    )
+
+    filtered = research_actions[
+        research_actions["priority"].astype(str).isin(priority)
+        & research_actions["status"].astype(str).isin(status)
+        & research_actions["related_company_id"].astype(str).isin(related_company_id)
+        & research_actions["related_thesis_id"].astype(str).isin(related_thesis_id)
+    ]
+    filtered = sort_research_actions(filtered)
+    active_actions = filtered[
+        filtered["status"].isin(["Open", "In Progress", "Waiting"])
+    ]
+    action_columns = [
+        "priority",
+        "status",
+        "due_date",
+        "action_title",
+        "reason",
+        "next_step",
+        "related_company_id",
+        "related_thesis_id",
+        "related_evidence_id",
+        "last_updated",
+    ]
+
+    st.subheader("Open / Active Actions")
+    show_table_or_message(
+        active_actions[action_columns],
+        "No open or active research actions match the selected filters.",
+    )
+
+    st.subheader("All Matching Actions")
+    show_table_or_message(
+        filtered[action_columns],
+        "No research actions match the selected filters.",
+    )
+
+
+def render_research_home(
+    research_actions: pd.DataFrame,
+    evidence: pd.DataFrame,
+    industry_theses: pd.DataFrame,
+    watchlist: pd.DataFrame,
+) -> None:
+    st.title("Research Home")
+    st.caption("What should I pay attention to next?")
+
+    active_statuses = ["Open", "In Progress", "Waiting"]
+    high_priority_actions = research_actions[
+        (research_actions["priority"] == "High")
+        & research_actions["status"].isin(active_statuses)
+    ]
+    high_priority_actions = sort_research_actions(high_priority_actions)
+
+    st.subheader("Open High Priority Research Actions")
+    show_table_or_message(
+        high_priority_actions[
+            [
+                "status",
+                "due_date",
+                "action_title",
+                "reason",
+                "next_step",
+                "related_company_id",
+                "related_thesis_id",
+            ]
+        ],
+        "No open high priority research actions.",
+    )
+
+    st.subheader("Recent Evidence")
+    recent_evidence = evidence.sort_values("date", ascending=False).head(8)
+    show_table_or_message(
+        recent_evidence[
+            [
+                "date",
+                "fact_text",
+                "evidence_title",
+                "evidence_direction",
+                "confidence",
+                "related_company_id",
+                "related_thesis_id",
+            ]
+        ],
+        "No evidence records yet.",
+    )
+
+    st.subheader("Evidence Marked Needs Review Or Challenges")
+    review_evidence = evidence[
+        evidence["evidence_direction"].isin(["needs_review", "challenges"])
+    ].sort_values("date", ascending=False)
+    show_table_or_message(
+        review_evidence[
+            [
+                "date",
+                "fact_text",
+                "evidence_title",
+                "evidence_direction",
+                "confidence",
+                "related_company_id",
+                "related_thesis_id",
+                "notes",
+            ]
+        ],
+        "No evidence is currently marked needs_review or challenges.",
+    )
+
+    st.subheader("Industry Theses That May Need Review")
+    review_thesis_ids = review_evidence["related_thesis_id"].dropna().astype(str).unique()
+    theses_to_review = industry_theses[
+        industry_theses["thesis_id"].isin(review_thesis_ids)
+        | industry_theses["status"].isin(["Watching", "Needs Review"])
+    ]
+    thesis_columns = [
+        "thesis_id",
+        "industry_layer",
+        "thesis_category",
+        "thesis_title",
+        "status",
+        "conviction",
+        "last_reviewed",
+        "key_questions",
+    ]
+    thesis_columns = [
+        column for column in thesis_columns if column in theses_to_review.columns
+    ]
+    show_table_or_message(
+        theses_to_review[thesis_columns].sort_values(["status", "last_reviewed"]),
+        "No industry theses are flagged for review by current evidence or status.",
+    )
+
+    st.subheader("High Priority Watchlist Items")
+    high_priority_watchlist = watchlist[watchlist["priority"] == "High"]
+    show_table_or_message(
+        high_priority_watchlist[
+            [
+                "company_id",
+                "current_position",
+                "thesis",
+                "risk",
+                "next_check",
+            ]
+        ].sort_values("next_check"),
+        "No high priority watchlist items.",
+    )
+
+
 def render_company_detail(
     companies: pd.DataFrame,
     financials: pd.DataFrame,
@@ -813,8 +1047,9 @@ def render_company_detail(
     products: pd.DataFrame,
     relationships: pd.DataFrame,
     watchlist: pd.DataFrame,
+    research_actions: pd.DataFrame,
 ) -> None:
-    st.title("Company Detail")
+    st.title("Company Research Brief")
     company_id, company_name = select_company(companies)
 
     company = companies[companies["company_id"] == company_id].iloc[0]
@@ -826,6 +1061,12 @@ def render_company_detail(
     company_watchlist = watchlist[watchlist["company_id"] == company_id]
     company_exposures = company_exposure[company_exposure["company_id"] == company_id]
     company_evidence = evidence[evidence["related_company_id"] == company_id]
+    company_actions = research_actions[
+        research_actions["related_company_id"] == company_id
+    ]
+    open_company_actions = sort_research_actions(
+        company_actions[company_actions["status"].isin(["Open", "In Progress", "Waiting"])]
+    )
     company_product_ids = source_ids_for_target(relationships, company_id, "Product")
     company_technology_ids = source_ids_for_target(relationships, company_id, "Technology")
     direct_product_ids = products[
@@ -862,11 +1103,13 @@ def render_company_detail(
     )
     st.dataframe(profile_summary, use_container_width=True, hide_index=True)
 
-    st.write("Watchlist / portfolio context")
-    watchlist_context = company_watchlist[
-        ["priority", "current_position", "thesis", "risk", "next_check"]
-    ]
-    show_table_or_message(watchlist_context, "No watchlist context for this company.")
+    st.write("Watchlist priority and next check")
+    show_table_or_message(
+        company_watchlist[
+            ["priority", "current_position", "thesis", "risk", "next_check"]
+        ],
+        "No watchlist context for this company.",
+    )
 
     st.write("Industry thesis exposure")
     exposure_view = company_exposures.merge(
@@ -899,23 +1142,27 @@ def render_company_detail(
         "No industry thesis exposure for this company.",
     )
 
-    st.write("Supporting or challenging evidence")
-    show_table_or_message(
-        company_evidence[
-            [
-                "date",
-                "fact_text",
-                "evidence_summary",
-                "evidence_direction",
-                "confidence",
-                "related_thesis_id",
-                "source_url",
-            ]
-        ],
-        "No evidence linked directly to this company.",
+    st.subheader("Supporting Evidence")
+    supporting_evidence = company_evidence[
+        company_evidence["evidence_direction"] == "supports"
+    ]
+    show_evidence_cards(
+        supporting_evidence,
+        "No supporting evidence linked directly to this company.",
     )
 
-    st.write("Recent events")
+    st.subheader("Challenging / Needs Review Evidence")
+    challenging_evidence = company_evidence[
+        company_evidence["evidence_direction"].isin(
+            ["challenges", "weakens", "needs_review"]
+        )
+    ]
+    show_evidence_cards(
+        challenging_evidence,
+        "No challenging, weakening, or needs_review evidence linked directly to this company.",
+    )
+
+    st.subheader("Recent Events")
     show_table_or_message(
         company_events[
             [
@@ -931,7 +1178,24 @@ def render_company_detail(
         "No recent events for this company.",
     )
 
-    st.write("Related technologies")
+    st.subheader("Open Research Actions")
+    show_table_or_message(
+        open_company_actions[
+            [
+                "priority",
+                "status",
+                "due_date",
+                "action_title",
+                "reason",
+                "next_step",
+                "related_thesis_id",
+                "related_evidence_id",
+            ]
+        ],
+        "No open research actions for this company.",
+    )
+
+    st.subheader("Related Technologies")
     related_technologies = technologies[
         technologies["technology_id"].isin(sorted(technology_ids))
     ]
@@ -949,7 +1213,7 @@ def render_company_detail(
         "No related technologies found for this company.",
     )
 
-    st.write("Related products")
+    st.subheader("Related Products")
     related_products = products[products["product_id"].isin(product_ids)]
     show_table_or_message(
         related_products[
@@ -966,7 +1230,31 @@ def render_company_detail(
         "No related products found for this company.",
     )
 
-    st.subheader(company_name)
+    st.subheader("Open Questions / Next Checks")
+    next_checks = []
+    for _, item in company_watchlist.iterrows():
+        next_checks.append(
+            {
+                "source": "Watchlist",
+                "question_or_check": item["risk"],
+                "next_step": item["next_check"],
+            }
+        )
+    for _, item in open_company_actions.iterrows():
+        next_checks.append(
+            {
+                "source": "Research Action",
+                "question_or_check": item["reason"],
+                "next_step": item["next_step"],
+            }
+        )
+    show_table_or_message(
+        pd.DataFrame(next_checks),
+        "No open questions or next checks for this company.",
+    )
+
+    st.subheader("Financial Snapshot")
+    st.write(company_name)
     profile = pd.DataFrame(
         {
             "Field": [
@@ -1140,11 +1428,14 @@ def main() -> None:
     products = load_products()
     evidence = load_evidence()
     relationships = load_relationships()
+    research_actions = load_research_actions()
 
     st.sidebar.title("AI Infrastructure")
     page = st.sidebar.radio(
         "Navigate",
         [
+            "Research Home",
+            "Research Actions",
             "Overview",
             "Companies",
             "Company Detail",
@@ -1163,7 +1454,16 @@ def main() -> None:
         label_visibility="collapsed",
     )
 
-    if page == "Overview":
+    if page == "Research Home":
+        render_research_home(
+            research_actions,
+            evidence,
+            industry_theses,
+            watchlist,
+        )
+    elif page == "Research Actions":
+        render_research_actions(research_actions)
+    elif page == "Overview":
         render_overview(companies, financials, events, theme_exposure)
     elif page == "Companies":
         render_companies(companies)
@@ -1182,6 +1482,7 @@ def main() -> None:
             products,
             relationships,
             watchlist,
+            research_actions,
         )
     elif page == "Financial Metrics":
         render_financial_metrics(companies, financials)
